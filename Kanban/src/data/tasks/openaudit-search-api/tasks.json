@@ -1,0 +1,399 @@
+{
+  "repo": "openaudit-search-api",
+  "tasks": [
+    {
+      "titulo": "Bootstrap do serviço (Node.js + Fastify): estrutura inicial, scripts e padrões de código",
+      "tags": [
+        "priority:high",
+        "type:chore",
+        "area:tooling",
+        "good first issue"
+      ],
+      "visao_geral": "Criar a base do serviço HTTP para que a comunidade consiga rodar localmente, testar e contribuir sem contexto prévio.",
+      "contexto": "O openaudit-search-api é a Fase 1 do roadmap: recebe uma consulta de texto livre e retorna uma lista de possíveis entidades (candidatos) para desambiguação humana. Ele não cruza fontes nem calcula indicadores. Precisamos de um projeto Node consistente, seguro e auditável.",
+      "descricao": "Implementar a estrutura inicial do projeto com Node.js e Fastify.\n\nEscopo:\n- Criar estrutura de pastas sugerida:\n  - `src/server.ts` (bootstrap Fastify)\n  - `src/routes/health.ts`\n  - `src/routes/search.ts`\n  - `src/modules/catalog/` (acesso ao catálogo SQLite)\n  - `src/modules/matching/` (scoring/confidence/explanation)\n  - `src/modules/cache/` (cache in-memory)\n  - `src/modules/observability/` (logs estruturados + request_id)\n  - `src/config/` (env parsing)\n- Adicionar scripts no `package.json`:\n  - `dev`, `build`, `start`, `test`, `lint`, `typecheck`\n- Adicionar ESLint + Prettier (ou Biome) e padronizar.\n- Adicionar `.env.example` sem segredos.\n- Adicionar `README.md` com instruções de execução local.\n\nRegras do projeto:\n- Não logar PII (ex.: `q` bruto). Preferir `query_hash`.\n- Garantir que o serviço seja fácil de rodar em dev (1 comando).",
+      "impacto": "Habilita o trabalho distribuído da comunidade e evita divergência de estilos/estrutura. Base para todas as tasks seguintes.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md"
+      ],
+      "definicao_de_pronto": [
+        "Projeto roda localmente com `npm run dev` (ou pnpm/yarn, padrão definido)",
+        "Endpoints /health e /search registrados (mesmo que stub)",
+        "Lint e typecheck passam",
+        "README contém comandos de execução, variáveis de ambiente e objetivos"
+      ]
+    },
+    {
+      "titulo": "Integrar openaudit-core-contracts: validar OpenAPI/JSON Schema e tipagem no search-api",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:contracts"
+      ],
+      "visao_geral": "Garantir que o serviço implemente exatamente o contrato oficial do ecossistema (source of truth).",
+      "contexto": "O core-contracts define o contrato do /search e os schemas de resposta (SearchResponse/Candidate). O search-api deve consumir tipos/schemas para evitar drift e garantir compatibilidade com a UI.",
+      "descricao": "Adicionar dependência do `openaudit-core-contracts` e usá-la como fonte:\n\nEscopo:\n- Consumir tipos TS gerados (ou OpenAPI) do core-contracts.\n- Implementar validação em runtime (opcional porém recomendado em dev/test) usando AJV:\n  - validar response do /search contra o schema.\n- Adicionar script `test:contracts` que valida exemplos/respostas.\n- Documentar no README qual versão/tag do core-contracts está sendo usada.\n\nRegras:\n- Se o schema mudar, CI deve acusar.\n- Response não deve incluir `query.raw` por padrão.",
+      "impacto": "Evita divergência entre UI e API e reduz bugs de integração. Aumenta auditabilidade e previsibilidade do ecossistema.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+      ],
+      "definicao_de_pronto": [
+        "Dependência do core-contracts adicionada e pinada por versão/tag",
+        "Tipos usados no código do handler /search",
+        "Teste valida que o response do /search está conforme schema",
+        "README atualizado com instruções e versão do core-contracts"
+      ]
+    },
+    {
+      "titulo": "Implementar endpoint GET /health (readiness/liveness) + testes",
+      "tags": [
+        "priority:medium",
+        "type:feature",
+        "area:api",
+        "good first issue"
+      ],
+      "visao_geral": "Adicionar endpoint básico de saúde para facilitar deploy, monitoramento e validação local.",
+      "contexto": "Mesmo no MVP, /health é usado por infra e por usuários para checar se a API está no ar. Deve ser simples e estável.",
+      "descricao": "Implementar `GET /health` retornando `{ \"status\": \"ok\" }`.\n\nEscopo:\n- Rota Fastify com resposta 200.\n- Teste de integração (supertest ou fastify.inject) validando payload e status.\n- Documentar no README (seção Endpoints).",
+      "impacto": "Melhora operabilidade e reduz atrito para contribuição e deploy.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+      ],
+      "definicao_de_pronto": [
+        "Endpoint /health implementado",
+        "Teste automatizado passando",
+        "README documenta /health"
+      ]
+    },
+    {
+      "titulo": "Implementar CatalogClient (SQLite read-only + FTS5): consulta por texto e filtros",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:catalog"
+      ],
+      "visao_geral": "Criar o módulo de acesso ao catálogo canônico (artefato gerado pelo openaudit-entity-catalog) para retornar candidatos de forma eficiente.",
+      "contexto": "O search-api não constrói o catálogo; ele consome um `catalog.sqlite` com FTS5. Precisamos de queries eficientes, read-only, com paginação, e retornando dados mínimos para desambiguação.",
+      "descricao": "Implementar `src/modules/catalog/` com:\n\n- Leitura de `CATALOG_DB_PATH` (SQLite) em modo read-only.\n- Query FTS5 pelo termo normalizado:\n  - buscar por `display_name`, `normalized_name` e aliases.\n- Filtros (se disponíveis no schema): `context_uf`, `context_year`, `context_role`.\n- Paginação: `limit` (max 25), `offset`.\n- Retornar campos necessários ao schema `Candidate`.\n\nRegras:\n- Não logar queries brutas.\n- Manter conexão e preparar statements (performance).\n- Respeitar limites de paginação e rate limit (anti-enumeração).",
+      "impacto": "Habilita o core do MVP: busca rápida e consistente. Sem isso o /search vira um stub e a UI não evolui.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/DATA_SOURCES.md"
+      ],
+      "definicao_de_pronto": [
+        "CatalogClient implementado com queries FTS5 e paginação",
+        "Config via env (`CATALOG_DB_PATH` e `CATALOG_META_PATH` se aplicável)",
+        "Testes de unidade para queries (com DB de teste pequeno)",
+        "Sem dependência de internet/serviços externos"
+      ]
+    },
+    {
+      "titulo": "Implementar normalização de query + geração de query_hash (sha256)",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:search",
+        "good first issue"
+      ],
+      "visao_geral": "Padronizar como a busca trata o input do usuário e gerar hash para auditoria sem persistir dados sensíveis.",
+      "contexto": "O projeto exige minimização de PII e auditabilidade. A API deve evitar armazenar `q` bruto e trabalhar com `normalized` + `query_hash`.",
+      "descricao": "Implementar `QueryNormalizer` com:\n- casefold\n- remoção de acentos\n- trim e normalização de espaços\n- tokenização simples (opcional)\n\nGerar `query_hash = sha256(\"normalized\")` com prefixo `sha256:`.\n\nRegras:\n- `normalized` nunca pode ser vazio (retornar 400 se input inválido).\n- Não retornar `query.raw` por padrão.\n\nAdicionar testes com casos:\n- acentos (\"João\" -> \"joao\")\n- espaços extras\n- caixa alta/baixa\n- input vazio",
+      "impacto": "Reduz risco (PII em logs) e aumenta consistência de match e cache. Base para auditoria e performance.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md"
+      ],
+      "definicao_de_pronto": [
+        "Normalizer implementado e testado",
+        "Hash sha256 implementado e testado",
+        "Handler /search usa normalized + query_hash",
+        "Input vazio retorna 400 com mensagem clara"
+      ]
+    },
+    {
+      "titulo": "Implementar endpoint GET /search completo (SearchResponse) + validação do contrato",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:api",
+        "area:search"
+      ],
+      "visao_geral": "Entregar o endpoint principal do MVP: busca retorna lista de candidatos com confidence e explanation, além de metadados do catálogo.",
+      "contexto": "A Fase 1 do roadmap depende deste endpoint para desambiguação humana. Deve ser rápido, auditável e não acusatório.",
+      "descricao": "Implementar `GET /search` conforme core-contracts:\n\n- Entradas:\n  - `q` obrigatório, `limit`/`offset` opcionais.\n- Processamento:\n  - normalizar query, gerar hash.\n  - consultar CatalogClient (SQLite FTS5).\n  - montar candidates[].\n  - preencher `catalog` com `name/version/snapshot_id/source` (lidos do `catalog_meta.json`).\n- Saída:\n  - JSON `SearchResponse` com `query.normalized`, `query.hash`, `catalog`, `candidates`.\n- Headers:\n  - `X-Request-Id`, `X-Catalog-Version`, `X-Cache`.\n\nRegras:\n- `confidence` e `explanation` devem existir para cada candidato (mesmo que simples no MVP).\n- Não incluir linguagem acusatória.\n- Não incluir `query.raw` por padrão.",
+      "impacto": "Viabiliza UI e seleção de candidato. Sem isso, o ecossistema não sai do papel.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/MANIFESTO.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+      ],
+      "definicao_de_pronto": [
+        "/search implementado e retornando SearchResponse",
+        "Response valida contra JSON Schema (em test/dev)",
+        "Headers retornados corretamente",
+        "Testes de integração cobrindo casos: termo comum, termo sem resultado, paginação"
+      ]
+    },
+    {
+      "titulo": "Implementar scoring/confidence + explanation (Matcher) com regras determinísticas",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:matching"
+      ],
+      "visao_geral": "Evitar caixa-preta: o match deve ser explicável e consistente, reduzindo falso positivo e risco reputacional.",
+      "contexto": "A seleção de entidade é a parte mais frágil do sistema. O contrato exige `confidence` e `explanation` para transparência. No MVP, o matcher pode ser simples e determinístico.",
+      "descricao": "Implementar `src/modules/matching/Matcher` que:\n\n- Produz `confidence` (0..1) baseado em sinais determinísticos:\n  - match exato do `normalized_name` (peso alto)\n  - match por tokens (peso médio)\n  - match em aliases (peso médio)\n  - bônus por contexto (UF/cargo/ano) se disponível\n- Produz `explanation[]` listando sinais aplicados (ex.: \"match_exact_name\", \"alias_hit\", \"uf_match\").\n\nRegras:\n- Explicações devem ser curtas e técnicas.\n- Evitar heurísticas opacas.\n\nAdicionar testes:\n- match exato vs parcial\n- alias\n- ordenação por score",
+      "impacto": "Aumenta defensabilidade do projeto e reduz erro de identificação. Melhora UX e confiança no sistema.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md"
+      ],
+      "definicao_de_pronto": [
+        "Matcher implementado com scoring determinístico",
+        "Explanation sempre presente e coerente",
+        "Testes cobrindo comportamento de ranking e sinais",
+        "Nenhum termo acusatório introduzido"
+      ]
+    },
+    {
+      "titulo": "Implementar leitura do catalog_meta.json + headers X-Catalog-Version",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:catalog",
+        "good first issue"
+      ],
+      "visao_geral": "Garantir auditabilidade do /search: toda resposta deve indicar qual versão/snapshot do catálogo foi usado.",
+      "contexto": "O catálogo é gerado por uma CLI e publicado com metadados e hashes. O search-api precisa expor essa versão no payload e em header.",
+      "descricao": "Implementar `CatalogMetaLoader`:\n- Ler `CATALOG_META_PATH` (JSON) na inicialização.\n- Validar contra schema do core-contracts (opcional recomendado).\n- Expor `catalog.version`, `catalog.snapshot_id`, `catalog.source`.\n- Injetar `X-Catalog-Version` em toda resposta do /search.\n\nRegras:\n- Falhar startup com mensagem clara se o meta estiver ausente/inválido.\n- Não tentar baixar meta automaticamente (MVP simples).",
+      "impacto": "Sem isso, você perde rastreabilidade e não consegue provar qual base gerou um resultado, o que é crítico para o projeto.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+      ],
+      "definicao_de_pronto": [
+        "Meta carregado no startup",
+        "Resposta inclui `catalog` preenchido",
+        "Header X-Catalog-Version presente",
+        "Testes cobrindo meta inválido/ausente (startup falha)"
+      ]
+    },
+    {
+      "titulo": "Adicionar cache in-memory (TTL curto) para /search + header X-Cache",
+      "tags": [
+        "priority:medium",
+        "type:feature",
+        "area:cache"
+      ],
+      "visao_geral": "Reduzir custo de consulta repetida e aumentar performance sem criar passivo de privacidade.",
+      "contexto": "O roadmap exige cache e marcação de cache_hit para auditoria. Para /search, o cache deve ser curto e baseado em query_hash (não q bruto).",
+      "descricao": "Implementar cache TTL in-memory:\n- key: `sha256(normalized + catalog_version + limit + offset)`\n- TTL: 60–300s (configurável)\n- Store: LRU/TTL (ex.: `lru-cache`)\n\nEmitir header:\n- `X-Cache: HIT|MISS`\n\nRegras:\n- Não armazenar `q` bruto no cache.\n- Limite de tamanho do cache configurável.\n\nTestes:\n- HIT após primeira chamada\n- Expiração por TTL\n- Cache invalidado se catalog_version mudar",
+      "impacto": "Melhora latência e reduz carga no SQLite. Ajuda UX e escalabilidade do MVP.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md"
+      ],
+      "definicao_de_pronto": [
+        "Cache implementado e configurável",
+        "Header X-Cache presente e correto",
+        "Testes passam para hit/miss/ttl",
+        "Nenhum dado bruto sensível armazenado"
+      ]
+    },
+    {
+      "titulo": "Observabilidade MVP: logs estruturados + request_id + redaction (sem PII)",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:observability",
+        "area:security"
+      ],
+      "visao_geral": "Padronizar logs do serviço para auditoria operacional e reduzir risco de vazamento de dados.",
+      "contexto": "O projeto exige minimização de dados sensíveis e rastreabilidade. Logs devem incluir request_id e query_hash, nunca q bruto.",
+      "descricao": "Implementar módulo de observabilidade:\n\n- Gerar `request_id` se ausente (UUID).\n- Retornar `X-Request-Id`.\n- Logar evento por request:\n  - `event.name=catalog.search`\n  - `query_hash`, `catalog_version`, `limit`, `offset`, `result_count`, `cache_hit`, `latency_ms`\n- Implementar redaction:\n  - remover/mascarar `req.query.q`\n  - remover headers `authorization`, `cookie`\n\nOpcional:\n- Integrar com `openaudit-observability` quando disponível.\n\nTestes:\n- garantir que logs não contêm `q` bruto\n- garantir presença de request_id",
+      "impacto": "Aumenta defensabilidade e capacidade de operar o serviço com segurança. Evita que o search-api vire fonte de PII em logs.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/MANIFESTO.md"
+      ],
+      "definicao_de_pronto": [
+        "X-Request-Id presente em respostas",
+        "Logs estruturados incluem query_hash e catalog_version",
+        "Testes provam ausência de q bruto e headers sensíveis",
+        "Documentação no README explicando campos logados"
+      ]
+    },
+    {
+      "titulo": "Rate limiting e proteções anti-enumeração no /search",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:security"
+      ],
+      "visao_geral": "Impedir abuso (enumeração e varredura massiva) e reduzir risco reputacional/jurídico.",
+      "contexto": "Busca por pessoas é sensível. Mesmo sem PII, um endpoint de busca pode ser usado para enumeração. O projeto pede mitigação ativa contra uso indevido.",
+      "descricao": "Adicionar rate limiting no /search:\n- Janela padrão: 60s\n- Máximo padrão: 60 req/min por IP (configurável)\n- Resposta 429 com payload mínimo\n\nAdicionar limites:\n- limit max 25\n- offset max (ex.: 1000) para evitar varredura\n\nAdicionar logs:\n- evento `rate_limit.hit`\n\nTestes:\n- exceder limite retorna 429\n- config altera limites\n\nObservação: sem bloquear uso legítimo, mas dificultar scraping massivo.",
+      "impacto": "Reduz superfície de abuso e melhora postura defensiva do projeto, alinhado com a política de risco.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md"
+      ],
+      "definicao_de_pronto": [
+        "Rate limiting ativo e configurável",
+        "429 retornado corretamente ao exceder",
+        "Logs registram bloqueios sem PII",
+        "Testes automatizados cobrindo cenário"
+      ]
+    },
+    {
+      "titulo": "Tratamento de erros padronizado (Error response) + não vazar detalhes sensíveis",
+      "tags": [
+        "priority:medium",
+        "type:feature",
+        "area:api",
+        "area:security"
+      ],
+      "visao_geral": "Padronizar respostas de erro para previsibilidade e segurança (sem stack traces em produção).",
+      "contexto": "Uma API robusta deve tratar erros de forma consistente e evitar vazamento de detalhes internos, caminhos de arquivo ou SQL bruto.",
+      "descricao": "Implementar handler global de erros:\n- Mapear erros comuns:\n  - 400 (q inválido)\n  - 404 (rota inexistente)\n  - 429 (rate limit)\n  - 500 (erro interno)\n- Resposta JSON mínima com:\n  - `error.code`\n  - `error.message` (genérica)\n  - `request_id`\n\nLogs internos podem ter detalhes (sem PII), mas response deve ser seguro.\n\nAdicionar testes para cada erro.",
+      "impacto": "Melhora UX e segurança operacional. Reduz risco de exposição acidental de detalhes internos.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+      ],
+      "definicao_de_pronto": [
+        "Handler global implementado",
+        "Erros mapeados retornam códigos corretos",
+        "request_id incluído em erros",
+        "Testes cobrindo erros mais comuns"
+      ]
+    },
+    {
+      "titulo": "Testes de integração com catálogo real mínimo (fixture sqlite + meta) e cenários de busca",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:tests"
+      ],
+      "visao_geral": "Garantir que o /search funciona de ponta a ponta com um catálogo SQLite real (FTS5) e metadados.",
+      "contexto": "Sem testes de integração com o catálogo real, a API pode funcionar em mock e quebrar em produção. Precisamos de um fixture mínimo e sintético.",
+      "descricao": "Criar em `tests/fixtures/`:\n- `catalog.sqlite` mínimo com 5–20 entidades sintéticas\n- tabela `entities` e índice FTS5 conforme esperado\n- `catalog_meta.json` sintético validável\n\nCenários de teste:\n- busca por termo exato retorna candidato esperado\n- busca por alias retorna candidato\n- busca sem resultados retorna lista vazia\n- paginação respeitada\n- filtros contextuais (se aplicável)\n- headers presentes (X-Request-Id, X-Catalog-Version, X-Cache)\n\nRegra: fixtures devem ser sintéticas (não usar pessoas reais).",
+      "impacto": "Aumenta estabilidade e confiabilidade do MVP e facilita contribuição sem depender de dados reais.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+      ],
+      "definicao_de_pronto": [
+        "Fixtures sqlite + meta adicionados",
+        "Testes de integração passam localmente e em CI",
+        "Nenhum dado real sensível presente",
+        "Cobertura mínima dos cenários listados"
+      ]
+    },
+    {
+      "titulo": "Dockerfile e docker-compose para execução local (com volume do catálogo)",
+      "tags": [
+        "priority:medium",
+        "type:chore",
+        "area:devops",
+        "good first issue"
+      ],
+      "visao_geral": "Facilitar execução da API em qualquer ambiente (inclusive comunidade) com catálogo montado via volume.",
+      "contexto": "Projetos comunitários precisam de onboarding fácil. Docker simplifica e reduz problemas de ambiente.",
+      "descricao": "Adicionar:\n- `Dockerfile` multi-stage (build e runtime)\n- `docker-compose.yml` com:\n  - serviço `search-api`\n  - volume montando `./data/catalog.sqlite` e `./data/catalog_meta.json`\n\nRegras:\n- Não incluir catálogo real no image.\n- Garantir que serviço inicia apenas se meta/db existirem.\n\nDocumentar no README:\n- como rodar `docker compose up`\n- como apontar para arquivos do catálogo",
+      "impacto": "Onboarding muito mais simples para comunidade e testes locais consistentes.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md"
+      ],
+      "definicao_de_pronto": [
+        "Dockerfile e compose funcionais",
+        "Documentação no README",
+        "Imagem roda sem precisar de internet além de build",
+        "Volumes de catálogo configurados"
+      ]
+    },
+    {
+      "titulo": "GitHub Actions CI: lint + test + build (e optional contract checks)",
+      "tags": [
+        "priority:high",
+        "type:ci",
+        "area:tooling"
+      ],
+      "visao_geral": "Garantir qualidade e estabilidade em PRs, facilitando contribuição com feedback rápido.",
+      "contexto": "Sem CI, PRs quebram o serviço e a comunidade perde confiança. CI deve garantir segurança (não vazar secrets) e testes consistentes.",
+      "descricao": "Criar workflow `.github/workflows/ci.yml` com:\n- setup Node 22\n- install\n- lint\n- test\n- build\n\nOpcional:\n- validar resposta do /search contra schema do core-contracts (se implementado)\n\nAdicionar badge no README.",
+      "impacto": "Melhora governança e previsibilidade de merges. Reduz retrabalho em revisão.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md"
+      ],
+      "definicao_de_pronto": [
+        "Workflow executa em PR e push",
+        "Pipeline passa com projeto saudável",
+        "Badge adicionado ao README"
+      ]
+    },
+    {
+      "titulo": "Documentação: README completo alinhado ao projeto (neutralidade, minimização, contrato e integração com catálogo)",
+      "tags": [
+        "priority:medium",
+        "type:docs",
+        "area:docs"
+      ],
+      "visao_geral": "Garantir que qualquer contribuidor entenda o objetivo do serviço, limites éticos, como rodar e como integrar com o catálogo.",
+      "contexto": "O search-api é a porta de entrada do usuário e tende a receber inputs sensíveis. A documentação precisa deixar claro o que ele faz e o que ele não faz.",
+      "descricao": "Atualizar ou criar README contendo:\n- Objetivo e escopo (não cruza fontes, não calcula anomalias)\n- Endpoints /health e /search\n- Contrato de resposta (sem query.raw por padrão)\n- Como usar `catalog.sqlite` + `catalog_meta.json`\n- Configuração por env\n- Segurança: não logar q bruto e redaction\n- Rate limit e paginação\n- Testes e fixtures sintéticas\n- Links para docs oficiais do projeto (Manifesto, Risk Policy, etc.) e LICENSE\n\nIncluir exemplos de curl e exemplos de resposta conforme core-contracts.",
+      "impacto": "Onboarding rápido, menos PRs ruins, maior aderência ao manifesto/política de risco.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-search-api/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/MANIFESTO.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md"
+      ],
+      "definicao_de_pronto": [
+        "README cobre todos os tópicos listados",
+        "Exemplos consistentes com core-contracts",
+        "Instruções de execução local e via Docker funcionando",
+        "Links para docs e licença incluídos"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "github-project-automation",
+  "version": "1.0.0",
+  "description": "A tool to automate the creation of GitHub projects, tags, and tasks based on a configuration file.",
+  "main": "index.js",
+  "engines": {
+    "node": ">= 22.x"
+  },
+  "scripts": {
+    "core-contracts": "node --env-file=.env index.js --owner OpenAudit-Brasil --project 'OpenAudit Brasil — Roadmap' --json './src/data/tasks/openaudit-core-contracts/tasks.json' --type issue",
+    "search-api": "node --env-file=.env index.js --owner OpenAudit-Brasil --project 'OpenAudit Brasil — Roadmap' --json './src/data/tasks/openaudit-search-api/tasks.json' --type issue",
+    "observability": "node --env-file=.env index.js --owner OpenAudit-Brasil --project 'OpenAudit Brasil — Roadmap' --json './src/data/tasks/openaudit-observability/tasks.json' --type issue",
+    "entity-catalog": "node --env-file=.env index.js --owner OpenAudit-Brasil --project 'OpenAudit Brasil — Roadmap' --json './src/data/tasks/openaudit-entity-catalog/tasks.json' --type issue"
+  }
+}

@@ -1,0 +1,352 @@
+{
+    "repo": "openaudit-entity-catalog",
+    "tasks": [
+        {
+            "titulo": "Bootstrap do repositório: CLI Python (Typer), estrutura de pastas, tooling e scripts padrão",
+            "tags": [
+                "priority:high",
+                "type:chore",
+                "area:tooling",
+                "good first issue"
+            ],
+            "visao_geral": "Criar a base operacional do `openaudit-entity-catalog` para que qualquer contribuidor consiga rodar build/validate/export localmente e gerar os artefatos versionados do catálogo.",
+            "contexto": "O `openaudit-entity-catalog` é um builder (CLI) que compila um catálogo canônico de entidades e gera artefatos (SQLite FTS5 + catalog_meta.json + QA + checksums) consumidos pelo `openaudit-search-api`. Ele não é um serviço HTTP.",
+            "descricao": "Implementar a estrutura inicial do projeto e o esqueleto da CLI.\n\nEscopo:\n- Criar estrutura de pastas conforme README do projeto:\n  - `openaudit_catalog/cli.py` (entrypoint)\n  - `openaudit_catalog/config.py`\n  - `openaudit_catalog/sources/` (fontes)\n  - `openaudit_catalog/transform/` (normalize/dedupe)\n  - `openaudit_catalog/qa/` (runner + checks)\n  - `openaudit_catalog/export/` (sqlite_fts, parquet, meta)\n  - `openaudit_catalog/utils/` (hashing/time)\n  - `docs/` + `tests/fixtures/`\n- Definir `pyproject.toml` (Python 3.11+) e dependências mínimas.\n- Adotar Typer (ou Click) para CLI e definir comandos (mesmo que stub): `build`, `validate`, `export`, `checksum`, `inspect`.\n- Criar `Makefile` opcional (atalhos) e `.env.example`.\n- Garantir que `pip install -e .` funcione e que `openaudit-catalog --help` funcione.\n\nRegras:\n- Fixtures e exemplos devem ser sintéticos.\n- Evitar PII (CPF) no MVP.",
+            "impacto": "Sem bootstrap, não existe contribuição comunitária viável. Esta task habilita o pipeline e cria o esqueleto para novas fontes e exports.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md"
+            ],
+            "definicao_de_pronto": [
+                "Estrutura base criada conforme descrito",
+                "CLI roda: `openaudit-catalog --help`",
+                "Instalação local funciona: `pip install -e .`",
+                "Comandos existem (podem ser stub), com mensagens claras",
+                "README do repo aponta como executar build/validate/export"
+            ]
+        },
+        {
+            "titulo": "Integrar openaudit-core-contracts no CLI: validação do catalog_meta.json via schema oficial",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:contracts"
+            ],
+            "visao_geral": "Garantir que o `catalog_meta.json` gerado pelo CLI segue o contrato oficial e pode ser consumido pelo search-api sem drift.",
+            "contexto": "O `openaudit-core-contracts` é a fonte de verdade. O catalog_meta precisa ser auditável (versões, hashes, QA). Se o formato variar, a integração quebra e a rastreabilidade do projeto se perde.",
+            "descricao": "Adicionar dependência do `openaudit-core-contracts` (pacote Python gerado) ou consumir o schema JSON diretamente.\n\nEscopo:\n- Implementar validação do `catalog_meta.json` após `export`:\n  - validar contra `schemas/catalog/catalog_meta.schema.json` do core-contracts.\n- Falhar com erro claro se inválido (incluindo o caminho do erro).\n- Adicionar teste que cria um meta sintético e valida.\n\nObservação:\n- Caso o pacote Python do core-contracts ainda não esteja publicado, consumir via git tag ou submodule (documentar no README).",
+            "impacto": "Garante compatibilidade, reduz bugs e torna o ecossistema realmente plug-and-play.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+            ],
+            "definicao_de_pronto": [
+                "Validação do meta implementada e executada no fluxo de export",
+                "Erro de validação é acionável (mostra campo inválido)",
+                "Teste automatizado cobrindo meta válido e inválido",
+                "README documenta como a validação funciona"
+            ]
+        },
+        {
+            "titulo": "Implementar comando `build`: ingestão de fonte inicial + normalização básica (staging)",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:catalog"
+            ],
+            "visao_geral": "Criar o primeiro pipeline funcional para gerar um catálogo a partir de uma fonte oficial (fase 1).",
+            "contexto": "Sem um build funcional, não existe catálogo para o search-api consumir. O build deve ser determinístico e produzir staging padronizado antes de exportar.",
+            "descricao": "Implementar o comando `openaudit-catalog build` com suporte a uma fonte inicial (ex.: `tse_candidates` como placeholder).\n\nEscopo técnico:\n- Definir interface de fonte:\n  - `fetch()` (baixar ou carregar arquivo local)\n  - `parse()` (converter para DataFrame)\n  - `map_to_entities()` (produzir colunas canônicas)\n- Definir staging padronizado em `dist/<version>/staging/entities.parquet` (ou csv/jsonl), contendo colunas mínimas:\n  - `entity_id`, `entity_type`, `display_name`, `normalized_name`, `aliases_json`, `context_uf`, `context_role`, `context_year`, `source_primary`, `source_ref`, `updated_at`\n- Persistir metadados da fonte em staging (ex.: `dist/<version>/staging/source_meta.json`).\n\nRegras:\n- Determinismo: mesmos inputs geram mesmo staging.\n- Dados sintéticos podem ser usados inicialmente para a primeira fonte (até a integração real).",
+            "impacto": "Viabiliza a cadeia completa: entity-catalog → catálogo → search-api. É o coração do MVP do catálogo.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/DATA_SOURCES.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+            ],
+            "definicao_de_pronto": [
+                "`openaudit-catalog build` cria diretório dist com staging",
+                "Staging contém as colunas mínimas e dados coerentes",
+                "Execução repetida com o mesmo input gera o mesmo output (hash igual)",
+                "Testes unitários para normalização e mapping passam"
+            ]
+        },
+        {
+            "titulo": "Implementar normalização de nomes (normalize_name) consistente com o search-api",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:transform",
+                "good first issue"
+            ],
+            "visao_geral": "Padronizar como nomes são normalizados para reduzir falso positivo e aumentar consistência entre catálogo e busca.",
+            "contexto": "Search-api usa normalização de query. O catálogo precisa produzir `normalized_name` com a mesma regra, senão o match piora e o ranking fica errado.",
+            "descricao": "Implementar `openaudit_catalog/transform/normalize.py` com função `normalize_name(name: str) -> str`:\n- lowercase/casefold\n- remoção de acentos\n- normalização de espaços\n- remoção opcional de pontuação\n\nAdicionar testes com casos:\n- acentos e cedilha\n- múltiplos espaços\n- caixa alta\n- strings vazias\n\nRegras:\n- Não inventar heurística complexa no MVP.\n- A função deve ser determinística e documentada.",
+            "impacto": "Melhora qualidade do /search e reduz erro de seleção de entidade. Fortalece auditabilidade por regras explícitas.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+            ],
+            "definicao_de_pronto": [
+                "normalize_name implementado e documentado",
+                "Testes unitários cobrindo casos principais",
+                "Pipeline build usa normalize_name para preencher normalized_name"
+            ]
+        },
+        {
+            "titulo": "Implementar comando `validate`: QA mínimo do catálogo + geração de qa_report.json",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:qa",
+                "area:tests"
+            ],
+            "visao_geral": "Adicionar quality gate obrigatório para evitar catálogo corrompido/inválido ser publicado.",
+            "contexto": "Se o catálogo estiver errado, o search-api retorna candidatos errados e o projeto perde credibilidade. QA deve detectar nulos, duplicatas e inconsistências básicas.",
+            "descricao": "Implementar `openaudit-catalog validate --path dist/<version>`:\n\nChecks críticos (falham build):\n- `entity_id` não nulo\n- `entity_id` único\n- `display_name` não nulo\n- `normalized_name` não nulo\n\nChecks warning (não falham, mas reportam):\n- duplicatas suspeitas por (display_name + context_uf + context_role + context_year)\n- UF inválida (quando presente)\n- aliases_json inválido\n\nGerar `qa_report.json` contendo:\n- `passed` boolean\n- `checks_failed` count\n- lista de checks com `severity`, `description`, `stats`.\n\nRegras:\n- QA deve rodar sobre o staging final.\n- Fixtures para testes devem ser sintéticas.",
+            "impacto": "Evita publicação de catálogo quebrado e reduz risco de falso positivo por erro estrutural/ETL.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+            ],
+            "definicao_de_pronto": [
+                "validate gera qa_report.json",
+                "Checks críticos falham com mensagem clara",
+                "Checks warning aparecem no report sem falhar",
+                "Testes automatizados cobrindo cenários de falha e sucesso"
+            ]
+        },
+        {
+            "titulo": "Implementar comando `export`: gerar catalog.sqlite (SQLite + FTS5) a partir do staging",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:export",
+                "area:catalog"
+            ],
+            "visao_geral": "Gerar o artefato principal consumível pelo search-api: SQLite read-only com FTS5 para busca rápida.",
+            "contexto": "O `openaudit-search-api` será Node e consumirá SQLite + FTS5. O CLI precisa exportar um banco consistente com schema esperado, incluindo índice full-text.",
+            "descricao": "Implementar `openaudit-catalog export --path dist/<version> --format sqlite`:\n\nEscopo:\n- Criar `catalog.sqlite` com tabela `entities` com colunas mínimas (README do projeto).\n- Criar FTS5 (ex.: `entities_fts`) indexando:\n  - display_name\n  - normalized_name\n  - aliases (concatenado)\n- Garantir referência para `entity_id`.\n- Garantir que `catalog.sqlite` pode ser usado em modo read-only.\n\nRegras:\n- Não incluir PII (CPF).\n- Export deve ser determinístico.\n\nTestes:\n- Criar um staging mínimo e exportar\n- Rodar query FTS simples e validar retorno",
+            "impacto": "Habilita o search-api de ponta a ponta e valida o conceito local-first/pipeline auditável.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md"
+            ],
+            "definicao_de_pronto": [
+                "catalog.sqlite gerado com tabela entities e índice FTS5",
+                "Testes confirmam que FTS retorna resultados esperados",
+                "Export roda sem internet e com fixtures sintéticas",
+                "README documenta onde fica o arquivo e como consumir"
+            ]
+        },
+        {
+            "titulo": "Implementar comando `export --format parquet`: gerar entities.parquet para auditoria",
+            "tags": [
+                "priority:medium",
+                "type:feature",
+                "area:export",
+                "good first issue"
+            ],
+            "visao_geral": "Gerar snapshot tabular auditável do catálogo para reprocessamento e inspeção externa.",
+            "contexto": "SQLite é ótimo para runtime, mas Parquet é melhor para auditoria/reprodutibilidade e inspeção de colunas. O README recomenda Parquet como opcional.",
+            "descricao": "Implementar suporte a export Parquet:\n- A partir do staging, gerar `entities.parquet` no diretório do release.\n- Incluir contagem de linhas no meta.\n\nTestes:\n- Export gera arquivo e contagem de linhas correta.\n\nRegras:\n- Não incluir campos sensíveis.\n- Garantir schema estável e versionado.",
+            "impacto": "Melhora auditabilidade e facilita inspeção de dados sem depender de SQLite.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+            ],
+            "definicao_de_pronto": [
+                "entities.parquet gerado corretamente",
+                "Testes validam existência e row count",
+                "Documentação explica finalidade e localização"
+            ]
+        },
+        {
+            "titulo": "Implementar comando `checksum`: gerar checksums.sha256 para artefatos publicados",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:audit",
+                "area:security",
+                "good first issue"
+            ],
+            "visao_geral": "Garantir integridade dos artefatos publicados (catalog.sqlite, meta, parquet, qa_report) por hashes sha256.",
+            "contexto": "A auditabilidade exige provas de integridade. Checksums permitem verificar se um catálogo foi alterado e servem como base de confiança para consumo.",
+            "descricao": "Implementar `openaudit-catalog checksum --path dist/<version>`:\n- Gerar `checksums.sha256` com sha256 de:\n  - catalog.sqlite\n  - catalog_meta.json\n  - qa_report.json\n  - entities.parquet (se existir)\n\nRegras:\n- Prefixar com `sha256:` ou seguir padrão compatível com core-contracts.\n- Ordenar entradas determinísticamente.\n\nTestes:\n- checksums gerados de forma estável\n- alteração em arquivo muda hash",
+            "impacto": "Aumenta confiança e defesa do projeto; facilita auditoria externa e interna.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+            ],
+            "definicao_de_pronto": [
+                "checksums.sha256 gerado com todos os artefatos",
+                "Hashes batem com conteúdo real",
+                "Testes cobrem estabilidade e alteração de conteúdo"
+            ]
+        },
+        {
+            "titulo": "Gerar catalog_meta.json completo durante export (proveniência + versões + QA + artifacts)",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:audit",
+                "area:catalog"
+            ],
+            "visao_geral": "Implementar a 'nota fiscal' do catálogo: metadados auditáveis com fonte, versões, QA e hashes.",
+            "contexto": "Sem meta, você não consegue provar qual fonte e qual build geraram o catálogo. O meta é consumido pelo search-api e deve seguir core-contracts.",
+            "descricao": "Implementar geração de `catalog_meta.json` durante `export`:\n\n- Preencher campos obrigatórios:\n  - `name`, `catalog_version`, `snapshot_id`, `schema_version`, `build_version`, `collected_at`\n  - `sources[]` (nome, dataset, url, collected_at, hash)\n  - `artifacts[]` com hashes e row counts\n  - `qa` com status e report_file\n\n- Garantir que `snapshot_id` é único e estável por build.\n- Validar contra core-contracts (ligação com task de contracts).\n\nTestes:\n- meta gerado e válido\n- meta muda se artefato muda",
+            "impacto": "Torna o catálogo defensável e auditável; sem isso o projeto perde rastreabilidade e confiança.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+            ],
+            "definicao_de_pronto": [
+                "catalog_meta.json gerado no dist/<version>",
+                "Validação contra core-contracts passa",
+                "Testes confirmam presença de artifacts + qa + sources",
+                "Documentação explica como o meta é consumido pelo search-api"
+            ]
+        },
+        {
+            "titulo": "Criar fixtures sintéticas completas (staging + sqlite + meta) para testes e exemplos",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:tests",
+                "area:security"
+            ],
+            "visao_geral": "Facilitar contribuição e CI sem depender de dados reais, mantendo privacidade e reprodutibilidade.",
+            "contexto": "A comunidade não deve usar dados reais sensíveis em testes. Fixtures sintéticas permitem validar export, FTS5 e meta com segurança.",
+            "descricao": "Adicionar em `tests/fixtures/`:\n- dataset sintético com 10–30 entidades\n- staging `entities.parquet` sintético\n- `catalog_meta.json` sintético válido\n\nTestes esperados:\n- build com fonte sintética\n- validate com checks\n- export sqlite e FTS query retorna\n- checksum gera hashes\n\nRegras:\n- Não usar nomes reais de políticos.\n- Dados devem ser claramente fictícios.",
+            "impacto": "Reduz barreira de entrada para contribuidores e mantém segurança do projeto (sem PII).",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+            ],
+            "definicao_de_pronto": [
+                "Fixtures adicionadas e documentadas",
+                "Testes usam fixtures e passam em CI",
+                "Nenhum dado real sensível presente",
+                "README/CONTRIBUTING explica política de fixtures"
+            ]
+        },
+        {
+            "titulo": "Implementar observabilidade do CLI: run_id + logs por etapa (ingest/normalize/qa/export) sem PII",
+            "tags": [
+                "priority:medium",
+                "type:feature",
+                "area:observability",
+                "area:security"
+            ],
+            "visao_geral": "Emitir logs estruturados e rastreáveis para cada execução do catálogo, habilitando auditoria operacional.",
+            "contexto": "Mesmo sendo CLI, precisamos saber: qual versão rodou, quanto tempo demorou, quantas linhas gerou e quais artefatos foram exportados — sem logar dados sensíveis.",
+            "descricao": "Adicionar logs estruturados no CLI:\n- gerar `run_id` por execução\n- logar eventos por etapa:\n  - `catalog.build`, `catalog.qa`, `catalog.export`, `catalog.checksum`\n- incluir `duration_ms`, `rows`, `artifact_hash` (sem dados pessoais)\n- redaction: garantir que nenhum payload bruto é impresso\n\nOpcional:\n- integração futura com `openaudit-observability` (repo separado) quando existir SDK Python.\n\nTestes:\n- verificar que logs não contêm nomes brutos/linhas completas\n- verificar presença de run_id",
+            "impacto": "Aumenta transparência e facilita depuração em contribuições e CI, mantendo segurança.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+            ],
+            "definicao_de_pronto": [
+                "Logs por etapa implementados com run_id",
+                "Campos úteis presentes (duration, rows, hashes)",
+                "Testes garantem ausência de conteúdo sensível nos logs",
+                "Documentação no README sobre logs gerados"
+            ]
+        },
+        {
+            "titulo": "CI GitHub Actions: lint + tests + build de exemplo (fixtures) garantindo reprodutibilidade",
+            "tags": [
+                "priority:high",
+                "type:ci",
+                "area:tooling"
+            ],
+            "visao_geral": "Automatizar qualidade do CLI: PR só entra se build/validate/export/checksum passarem em ambiente limpo.",
+            "contexto": "Sem CI, o catálogo pode quebrar silenciosamente e publicar artefatos inválidos. O pipeline precisa ser confiável para colaboração aberta.",
+            "descricao": "Criar workflow `.github/workflows/ci.yml` com:\n- setup Python 3.11+\n- instalar dependências\n- rodar lint (ruff/flake8) e format (black/ruff format)\n- rodar tests (pytest)\n- executar pipeline com fixtures:\n  - build\n  - validate\n  - export sqlite\n  - checksum\n\nOpcional:\n- cache de deps\n- artifact upload de outputs de teste (para debug)\n\nRegras:\n- garantir que fixtures não incluem PII.\n- falhar se catalog_meta inválido (task de contracts).",
+            "impacto": "Eleva qualidade e confiabilidade do catálogo. Facilita contribuição da comunidade e evita regressões.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md"
+            ],
+            "definicao_de_pronto": [
+                "Workflow roda em PR/push",
+                "CI executa lint + tests + build com fixtures e passa",
+                "Falhas apresentam logs úteis",
+                "Badge no README (opcional)"
+            ]
+        },
+        {
+            "titulo": "Documentação: Guia de contribuição para novas fontes (Source Record + termos/licença + QA + mapping)",
+            "tags": [
+                "priority:medium",
+                "type:docs",
+                "area:community",
+                "good first issue"
+            ],
+            "visao_geral": "Permitir que contribuidores adicionem novas fontes de catálogo de forma segura e auditável.",
+            "contexto": "Fontes públicas têm termos e formatos diferentes. Sem um guia claro, contribuições podem violar ToS ou introduzir dados sensíveis.",
+            "descricao": "Criar `docs/sources/README.md` com:\n- Template de Source Record:\n  - nome oficial, órgão, URLs, termos/licença\n  - campos usados\n  - riscos (schema instável, atraso)\n  - política de cache (para build)\n- Checklist para PR de nova fonte:\n  - documentação\n  - fixtures sintéticas\n  - QA mínimo\n  - mapeamento para schema canônico\n\nIncluir referências diretas ao DATA_SOURCES e políticas do projeto.",
+            "impacto": "Reduz risco jurídico e melhora qualidade das integrações. Acelera crescimento do catálogo com governança.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/DATA_SOURCES.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md"
+            ],
+            "definicao_de_pronto": [
+                "Documento criado em docs/sources",
+                "Template de Source Record incluído",
+                "Checklist de PR incluído e acionável",
+                "README principal referencia o guia"
+            ]
+        },
+        {
+            "titulo": "Implementar comando `inspect`: estatísticas do catálogo (rows, versões, fontes) para auditoria rápida",
+            "tags": [
+                "priority:low",
+                "type:feature",
+                "area:tooling",
+                "good first issue"
+            ],
+            "visao_geral": "Facilitar auditoria humana: um comando que mostra rapidamente o que foi gerado e de onde veio.",
+            "contexto": "Contribuidores e mantenedores precisam checar se um build parece correto sem abrir arquivos manualmente.",
+            "descricao": "Implementar `openaudit-catalog inspect --path dist/<version>`:\n- Ler `catalog_meta.json`\n- Imprimir:\n  - catalog_version, snapshot_id\n  - sources (nome, collected_at)\n  - artifacts e hashes\n  - qa status\n  - row count (se parquet/sqlite existir)\n\nRegras:\n- Saída simples e sem dados sensíveis.\n\nTestes:\n- inspect funciona com fixture de dist.",
+            "impacto": "Melhora UX do maintainership e facilita revisão de PRs e releases.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+            ],
+            "definicao_de_pronto": [
+                "inspect implementado e documentado",
+                "Testes passando",
+                "Saída inclui versões, fontes, QA e hashes"
+            ]
+        }
+    ]
+}

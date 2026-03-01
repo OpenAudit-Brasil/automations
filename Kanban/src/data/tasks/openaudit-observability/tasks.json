@@ -1,0 +1,280 @@
+{
+    "repo": "openaudit-observability",
+    "tasks": [
+        {
+            "titulo": "Bootstrap do repositório: estrutura multi-package (Node + Python), tooling e scripts padrão",
+            "tags": [
+                "priority:high",
+                "type:chore",
+                "area:tooling",
+                "good first issue"
+            ],
+            "visao_geral": "Criar a base do `openaudit-observability` para que a comunidade consiga desenvolver e testar os SDKs de observabilidade (Node e Python) em um padrão único.",
+            "contexto": "O `openaudit-observability` implementa a emissão de logs/métricas/traces conforme contratos definidos no `openaudit-core-contracts`. Sem um bootstrap consistente, contribuições ficam difíceis e a telemetria vira inconsistente.",
+            "descricao": "Implementar estrutura do repo conforme README e padrão do ecossistema.\n\nEscopo:\n- Criar diretórios:\n  - `packages/node/` (SDK Node)\n  - `packages/python/` (SDK Python)\n  - `docs/` (uso, redaction, métricas, traces)\n  - `examples/` (exemplos executáveis)\n- Definir scripts no root:\n  - `install` (instala deps de todos os pacotes)\n  - `lint`, `test`, `build`\n  - `validate:contracts` (valida exemplos/logs contra schemas do core-contracts)\n- Adicionar `.gitignore` e configs base.\n- Garantir que qualquer dev consiga rodar testes com 1 comando (documentar).\n\nRegras:\n- Tudo deve ser pensado para evitar PII (redaction default-on).\n- O repo não deve depender de stack externa (Grafana/ELK).",
+            "impacto": "Habilita o desenvolvimento comunitário do SDK de observabilidade e reduz risco de divergência de padrões no ecossistema.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md"
+            ],
+            "definicao_de_pronto": [
+                "Estrutura multi-package criada (Node + Python + docs + examples)",
+                "Instruções de execução local funcionando",
+                "Scripts base existentes e executáveis",
+                "Readme atualizado com onboarding (install/test)"
+            ]
+        },
+        {
+            "titulo": "Integrar core-contracts: validar que exemplos e eventos emitidos seguem LogEvent/ErrorEvent schema",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:contracts",
+                "area:tests"
+            ],
+            "visao_geral": "Garantir que a implementação de observabilidade está 100% alinhada ao contrato oficial (schemas) e falha em CI se houver drift.",
+            "contexto": "O core-contracts é a fonte de verdade dos schemas de logs e convenções. Observability deve validar sua saída contra esses schemas, senão perde valor como padronização.",
+            "descricao": "Adicionar dependência do core-contracts e criar testes que:\n\n- Carreguem os JSON Schemas `log_event` e `error_event`.\n- Validem JSONs em `examples/` (logs) e outputs gerados pelos SDKs.\n- Falhem com mensagens acionáveis (qual campo violou o schema).\n\nEscopo técnico:\n- Node: AJV para validação.\n- Python: jsonschema ou validação via modelos gerados (se disponíveis).\n\nRegras:\n- Nunca permitir `q` bruto em `data`.\n- Nunca permitir headers sensíveis em logs.",
+            "impacto": "Cria uma 'trava' que impede telemetria inválida de entrar no ecossistema, garantindo compatibilidade e auditabilidade.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+            ],
+            "definicao_de_pronto": [
+                "Testes validam exemplos/logs contra schemas do core-contracts",
+                "CI falha se log/evento não validar",
+                "Mensagens de erro são acionáveis (path + motivo)",
+                "Documentação explica como rodar validação local"
+            ]
+        },
+        {
+            "titulo": "SDK Node: plugin Fastify (request_id, request logging, headers, redaction default-on)",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:node",
+                "area:observability"
+            ],
+            "visao_geral": "Entregar o componente mais usado no MVP: instrumentação do `openaudit-search-api` (Node/Fastify) com logs e correlação.",
+            "contexto": "Search-api precisa de logs estruturados sem PII, request_id automático e headers padrão. O plugin deve ser plug-and-play e seguir o schema LogEvent do core-contracts.",
+            "descricao": "Implementar em `packages/node/` um plugin Fastify `openauditObservabilityPlugin` com:\n\n- `request_id`:\n  - gerar UUID se não vier\n  - setar header `X-Request-Id`\n- request logging (um evento por request):\n  - event.name: `http.request`\n  - duration_ms\n  - status\n  - route/method\n- helper para eventos internos:\n  - `logEvent(eventName, data, context)`\n  - (ex.: `catalog.search`, `cache.hit`)\n- redaction default-on:\n  - remover/mascarar `req.query.q`\n  - remover `authorization`, `cookie`\n  - opção de adicionar paths extras\n- configuração via options:\n  - serviceName, serviceVersion, env\n  - enableMetrics (opcional)\n\nRegras:\n- logs devem validar contra `log_event.schema.json`.\n- jamais logar `q` bruto; apenas `query_hash` se fornecido pelo app.\n\nAdicionar testes com fastify.inject:\n- request_id gerado\n- headers presentes\n- logs não contêm campos proibidos",
+            "impacto": "Permite instrumentar rapidamente o search-api e padroniza auditoria operacional desde o MVP.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md"
+            ],
+            "definicao_de_pronto": [
+                "Plugin Fastify implementado e documentado",
+                "Testes comprovam request_id/headers e redaction",
+                "Saída valida contra schema do core-contracts (via testes)",
+                "Exemplo executável em examples/node-fastify"
+            ]
+        },
+        {
+            "titulo": "SDK Node: middleware Express (opcional) com a mesma semântica do plugin Fastify",
+            "tags": [
+                "priority:medium",
+                "type:feature",
+                "area:node",
+                "area:observability"
+            ],
+            "visao_geral": "Garantir compatibilidade com serviços Node que não usem Fastify, mantendo o mesmo contrato de logs.",
+            "contexto": "Alguns contribuidores podem preferir Express. Um middleware simples ajuda adoção sem fragmentar padrões.",
+            "descricao": "Implementar em `packages/node/` um middleware Express que:\n- gere/propague `request_id`\n- injete `X-Request-Id`\n- emita evento `http.request` no formato LogEvent\n- aplique redaction default-on\n\nAdicionar testes com supertest.\n\nRegras:\n- Sem duplicar lógica: extrair núcleo compartilhado (logger + redaction + event builder).",
+            "impacto": "Aumenta adoção do padrão de observabilidade sem forçar framework único.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+            ],
+            "definicao_de_pronto": [
+                "Middleware Express implementado",
+                "Testes passando",
+                "Eventos validam contra schema",
+                "Docs com exemplo de uso"
+            ]
+        },
+        {
+            "titulo": "SDK Python: run_context + stage() para CLIs (run_id, durations, logs estruturados sem PII)",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:python",
+                "area:observability"
+            ],
+            "visao_geral": "Instrumentar CLIs e pipelines (ex.: openaudit-entity-catalog) com logs por etapa e correlação por run_id.",
+            "contexto": "Entity-catalog é CLI e precisa registrar build/validate/export/checksum com run_id e duração. Sem isso, não há auditoria operacional nem depuração simples.",
+            "descricao": "Implementar em `packages/python/`:\n\n- `run_context(service, version, env, run_id=None)`:\n  - cria `run_id` se ausente\n  - configura logger JSON\n  - injeta campos padrão (service/env/correlation)\n\n- `stage(name)`:\n  - mede duration_ms\n  - emite evento `pipeline.stage.<name>` ou `catalog.<name>`\n  - aceita `data` (rows, hashes) sem PII\n\n- redaction default-on:\n  - remover/mascarar chaves proibidas se apareçam no payload\n\nTestes:\n- logs gerados contêm run_id\n- durations existem\n- redaction funciona",
+            "impacto": "Habilita rastreabilidade e depuração do pipeline de catálogo e de futuros CLIs sem depender de stack externa.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md"
+            ],
+            "definicao_de_pronto": [
+                "run_context e stage implementados",
+                "Testes automatizados passam",
+                "Logs gerados validam contra schema (via validação)",
+                "README do pacote Python inclui exemplo de uso"
+            ]
+        },
+        {
+            "titulo": "Implementar redaction policy (Node+Python): denylist + allowlist + testes anti-PII",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:security",
+                "area:observability",
+                "area:tests"
+            ],
+            "visao_geral": "Criar a camada de segurança que impede vazamentos acidentais (PII, headers sensíveis) em logs e telemetria.",
+            "contexto": "OpenAudit é um projeto sensível. Um vazamento de dados em logs (q bruto, CPF, headers) cria risco jurídico e reputacional. Redaction precisa ser default-on e testado.",
+            "descricao": "Criar uma policy explícita e implementações em Node e Python.\n\nNode:\n- Implementar redaction por paths comuns:\n  - `req.query.q`\n  - `req.headers.authorization`, `req.headers.cookie`\n  - quaisquer keys como `cpf`, `documento`, `token`, `password`\n\nPython:\n- Filtrar payloads que contenham keys sensíveis.\n\nAdicionar allowlist (opcional):\n- permitir apenas keys seguras no `data` para eventos críticos.\n\nAdicionar testes:\n- garantir que `q` bruto nunca aparece nos logs\n- garantir que headers sensíveis nunca aparecem\n- garantir que chaves 'cpf' são removidas/mascaradas se surgirem",
+            "impacto": "Reduz risco de vazamento e aumenta defensabilidade do projeto. Sem isso, qualquer integração pode virar passivo.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/MANIFESTO.md"
+            ],
+            "definicao_de_pronto": [
+                "Redaction implementada em Node e Python",
+                "Testes anti-PII passando",
+                "Docs descrevem o que é removido/mascarado",
+                "Default-on confirmado"
+            ]
+        },
+        {
+            "titulo": "Métricas (Node): expor /metrics (Prometheus) com counters e histogramas mínimos do MVP",
+            "tags": [
+                "priority:medium",
+                "type:feature",
+                "area:metrics",
+                "area:node"
+            ],
+            "visao_geral": "Adicionar métricas padronizadas para monitorar latência, volume e cache_hit sem precisar de infra complexa.",
+            "contexto": "Mesmo no MVP, métricas simples ajudam operação. Devem seguir o registry do core-contracts e ser opcionais por feature flag.",
+            "descricao": "Implementar no pacote Node:\n- opção `enableMetrics=true`\n- endpoint `/metrics` (Prometheus) com:\n  - `http_requests_total{method,route,status}`\n  - `http_request_duration_ms{route}`\n  - `cache_hit_total{route}` (quando o app reportar cache_hit)\n  - `search_candidates_returned` (quando o app reportar result_count)\n\nRegras:\n- Métricas não devem carregar PII.\n- Nomes/labels devem alinhar com registry no core-contracts.\n\nTestes:\n- endpoint existe quando habilitado\n- métricas são incrementadas",
+            "impacto": "Aumenta observabilidade operacional e prepara o ecossistema para monitoramento real sem custo alto.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+            ],
+            "definicao_de_pronto": [
+                "Endpoint /metrics implementado com feature flag",
+                "Métricas mínimas presentes e atualizadas",
+                "Testes passam e validam output básico",
+                "Documentação de uso no README do pacote Node"
+            ]
+        },
+        {
+            "titulo": "Traces (opcional): suporte OpenTelemetry (Node e Python) com feature flag e spans padronizados",
+            "tags": [
+                "priority:low",
+                "type:feature",
+                "area:tracing",
+                "area:observability"
+            ],
+            "visao_geral": "Adicionar suporte opcional a tracing distribuído para futura fase de pipeline/análise, sem obrigar dependências no MVP.",
+            "contexto": "O roadmap prevê pipeline com múltiplas etapas. Tracing ajuda correlacionar etapas com run_id e investigar gargalos, mas deve ser opcional.",
+            "descricao": "Implementar feature flag `OTEL_ENABLED` (ou similar).\n\nNode:\n- iniciar tracer provider\n- criar spans `http.server` e `catalog.search` (se o app usar helper)\n\nPython:\n- criar spans `pipeline.stage.<name>`\n\nRegras:\n- atributos: `request_id`, `run_id`, `service.version`, `catalog_version`\n- sem PII\n- seguir `span_names.yaml` do core-contracts\n\nTestes:\n- quando OTEL desligado, não quebra\n- quando ligado, spans são criados (mock exporter)",
+            "impacto": "Prepara evolução para fase 2+ sem refatoração massiva. Mantém modularidade e controle por feature flag.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md"
+            ],
+            "definicao_de_pronto": [
+                "Feature flag implementada",
+                "Spans padronizados criados quando habilitado",
+                "Testes básicos de não-regressão passam",
+                "Docs explicam como habilitar"
+            ]
+        },
+        {
+            "titulo": "Criar exemplos executáveis: Node Fastify (search-api mock) + Python CLI (entity-catalog mock)",
+            "tags": [
+                "priority:high",
+                "type:feature",
+                "area:examples",
+                "area:docs"
+            ],
+            "visao_geral": "Fornecer exemplos prontos que provam adoção e ajudam contribuidores a entenderem como integrar observability no mundo real.",
+            "contexto": "Sem exemplos executáveis, a comunidade não sabe como aplicar o SDK e as implementações divergem. Exemplos também servem como base de teste e validação contra schemas.",
+            "descricao": "Adicionar em `examples/`:\n\n1) `examples/node-fastify/`:\n- mini app Fastify com plugin observability\n- endpoint /search simulado que loga evento `catalog.search` com `query_hash`, `result_count`, `cache_hit`\n- se metrics habilitado, expor /metrics\n\n2) `examples/python-cli/`:\n- mini CLI que executa `build → qa → export` usando run_context e stages\n- loga hashes fictícios de artefatos\n\nRegras:\n- Sem PII.\n- Logs gerados devem validar contra schema.\n\nAdicionar documentação: como executar os exemplos.",
+            "impacto": "Acelera adoção e reduz erros de integração. Funciona como 'living documentation' e base de testes.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+            ],
+            "definicao_de_pronto": [
+                "Exemplos Node e Python executáveis",
+                "Documentação de execução incluída",
+                "Logs gerados validam contra schema (test/validate)",
+                "Sem dados reais sensíveis"
+            ]
+        },
+        {
+            "titulo": "Documentação: guias de uso (Node/Python) + política de PII/redaction + checklist de integração",
+            "tags": [
+                "priority:medium",
+                "type:docs",
+                "area:docs",
+                "area:security",
+                "good first issue"
+            ],
+            "visao_geral": "Criar documentação acionável para que qualquer contribuidor consiga integrar observability sem conhecer o projeto.",
+            "contexto": "Observability é frequentemente mal integrado (logs inconsistentes, PII em logs, ausência de request_id). O projeto precisa de guias explícitos e checklist.",
+            "descricao": "Criar/atualizar documentos em `docs/`:\n- `usage-node.md`: como registrar plugin e emitir eventos\n- `usage-python.md`: como usar run_context e stages\n- `pii-redaction.md`: o que é proibido, como redaction funciona\n- `metrics.md`: quais métricas existem, como habilitar\n- `traces.md`: como habilitar OTel (feature flag)\n\nIncluir checklist de integração:\n- request_id e header\n- não logar q bruto\n- usar query_hash\n- status/duration em eventos\n- validação contra schema em CI",
+            "impacto": "Reduz bugs, acelera adoção e melhora postura defensiva do projeto (PII/risco).",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md"
+            ],
+            "definicao_de_pronto": [
+                "Docs adicionados/atualizados",
+                "Checklist presente e referenciado no README",
+                "Exemplos no doc correspondem aos pacotes reais",
+                "Guia deixa explícito como evitar PII"
+            ]
+        },
+        {
+            "titulo": "CI GitHub Actions: lint + tests + validate:contracts (Node+Python) com matrix de versões",
+            "tags": [
+                "priority:high",
+                "type:ci",
+                "area:tooling"
+            ],
+            "visao_geral": "Garantir qualidade contínua e impedir drift dos contratos de observabilidade.",
+            "contexto": "Sem CI, o SDK pode começar a emitir logs fora do schema e quebrar consumidores. CI deve validar outputs e redaction.",
+            "descricao": "Criar `.github/workflows/ci.yml` com jobs:\n\n- Node job:\n  - setup Node 22\n  - instalar deps\n  - lint\n  - test\n\n- Python job:\n  - setup Python 3.11+\n  - instalar deps\n  - lint (ruff/flake8)\n  - test (pytest)\n\n- validate contracts job:\n  - rodar validação de exemplos e eventos contra core-contracts\n  - falhar se qualquer JSON não validar\n\nOpcional:\n- cache de deps\n- upload de artifacts (logs gerados) para debug",
+            "impacto": "Evita regressões e assegura que o ecossistema mantenha padrões consistentes de auditoria e segurança.",
+            "referencias": [
+                "https://github.com/OpenAudit-Brasil/openaudit-observability/blob/main/README.md",
+                "https://github.com/OpenAudit-Brasil/openaudit-core-contracts",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md",
+                "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+            ],
+            "definicao_de_pronto": [
+                "Workflow criado e executando em PR/push",
+                "Lint/tests passam para Node e Python",
+                "validate:contracts passa e falha quando schema quebra",
+                "README com badge (opcional)"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,398 @@
+{
+  "repo": "openaudit-core-contracts",
+  "tasks": [
+    {
+      "titulo": "Bootstrap do repositório: estrutura de pastas, tooling Node (pnpm) e scripts padrão",
+      "tags": [
+        "priority:high",
+        "type:chore",
+        "area:tooling",
+        "good first issue"
+      ],
+      "visao_geral": "Criar a base operacional do core-contracts para que toda contribuição futura seja validável e reproduzível (schemas, OpenAPI, exemplos, geração de tipos e CI).",
+      "contexto": "O core-contracts é a fonte única de verdade para contratos do ecossistema. Sem estrutura e scripts padrão, a comunidade não consegue contribuir com segurança nem garantir compatibilidade entre serviços.",
+      "descricao": "Implementar a estrutura inicial do repositório e o mínimo de tooling.\n\nEscopo:\n- Criar diretórios: `openapi/`, `schemas/`, `examples/`, `scripts/`, `packages/`.\n- Adicionar `package.json` com scripts:\n  - `validate` (roda validação de OpenAPI + schemas + exemplos)\n  - `generate` (gera tipos TS e modelos Python)\n  - `test` (roda validações e checks de consistência)\n- Padronizar gerenciador de pacotes (recomendado: `pnpm`) e incluir instruções no README.\n- Adicionar `.gitignore` (ex.: `packages/typescript`, `packages/python` se gerados; ou manter commitados e ignorar artefatos temporários).\n- Criar `scripts/validate_schemas.ts`, `scripts/validate_openapi.ts`, `scripts/validate_examples.ts` (mesmo que inicialmente com placeholder, já conectados no `package.json`).",
+      "impacto": "Habilita contribuições imediatas com um pipeline de validação consistente. Reduz divergência entre contratos e implementações nos repositórios consumidores.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md"
+      ],
+      "definicao_de_pronto": [
+        "Estrutura de diretórios criada conforme especificado",
+        "`pnpm install` funciona sem erros",
+        "`pnpm validate` executa (mesmo que com validações iniciais simples) e retorna código de saída adequado",
+        "`pnpm test` executa e passa",
+        "README atualizado com instruções de execução local (mínimo: install/validate/generate/test)"
+      ]
+    },
+    {
+      "titulo": "Definir OpenAPI do openaudit-search-api (Fase 1): /health e /search",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:openapi",
+        "good first issue"
+      ],
+      "visao_geral": "Formalizar o contrato HTTP da Fase 1 (busca → lista de candidatos) para permitir UI e search-api evoluírem sem quebra.",
+      "contexto": "No roadmap, a Fase 1 depende de um endpoint de busca que retorna candidatos com confidence/explanation para desambiguação humana. O contrato deve ser explícito e testável.",
+      "descricao": "Criar/atualizar `openapi/search-api.yaml` com:\n\n- `GET /health`:\n  - resposta 200 `{ status: 'ok' }`.\n\n- `GET /search`:\n  - query params: `q` (obrigatório), `limit` (default 10, max 25), `offset` (default 0).\n  - headers de resposta: `X-Request-Id`, `X-Catalog-Version`, `X-Cache` (HIT|MISS).\n  - response body referenciando JSON Schema `schemas/search/search_response.schema.json`.\n\nRegras importantes:\n- Evitar campos que incentivem PII. `q` é input, mas o response não deve exigir `query.raw`.\n- O contrato deve reforçar que a API retorna candidatos, não identificação conclusiva.",
+      "impacto": "Cria uma interface estável para UI e serviços. Facilita validação automática e evita divergência de payloads.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/MANIFESTO.md"
+      ],
+      "definicao_de_pronto": [
+        "`openapi/search-api.yaml` criado/atualizado",
+        "Lint/validação do OpenAPI passando em `pnpm validate`",
+        "Endpoints /health e /search definidos com parâmetros, headers e schema de resposta",
+        "Sem referência a campos proibidos (ex.: CPF) como requisito de Fase 1"
+      ]
+    },
+    {
+      "titulo": "Criar JSON Schemas (common): enums e IDs (confidence, severity, stage, hashes)",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:schema"
+      ],
+      "visao_geral": "Estabelecer blocos reutilizáveis para todos os contratos (agora e no futuro), evitando duplicação e inconsistências.",
+      "contexto": "Contratos do OpenAudit precisam ser auditáveis e consistentes. Campos como `confidence`, `hash (sha256)`, `stage` e `severity` aparecem em múltiplos lugares (search, catálogo, observabilidade, análise futura).",
+      "descricao": "Criar em `schemas/common/`:\n- `confidence.enum.json`: valores aceitos (ex.: `low|medium|high` OU numérico; escolha e documente).\n- `severity.enum.json`: `info|warning|critical` (para QA e observabilidade).\n- `stage.enum.json`: estágios padrão (ex.: `search`, `ingest`, `normalize`, `qa`, `export`, `cache`, `audit`).\n- `ids.schema.json`: padrões de IDs e hashes:\n  - `sha256:` prefix + regex.\n  - `snapshot_id` pattern.\n  - `entity_id` pattern (sem amarrar a uma fonte única, mas com convenção clara).\n\nObservação: mantenha o design compatível com a Política de Risco: evitar campos que possam carregar PII desnecessária.",
+      "impacto": "Reduz quebra e retrabalho. Permite que qualquer novo schema reutilize padrões e seja validado automaticamente.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md"
+      ],
+      "definicao_de_pronto": [
+        "Arquivos em `schemas/common/` criados e validados (JSON Schema válido)",
+        "Enums e padrões documentados em comentários/README do repo",
+        "Schemas referenciáveis por `$ref` em outros schemas"
+      ]
+    },
+    {
+      "titulo": "Criar JSON Schema: Candidate (candidato retornado no /search) com confidence + explanation",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:schema"
+      ],
+      "visao_geral": "Definir o contrato do item básico retornado pela busca, garantindo desambiguação humana e reduzindo falso positivo.",
+      "contexto": "A etapa de identificação automática é o maior gerador de falso positivo. O contrato deve exigir `confidence` e `explanation` para transparência e auditabilidade.",
+      "descricao": "Criar `schemas/search/candidate.schema.json` com campos obrigatórios:\n- `entity_id` (string, com padrão em `common/ids.schema.json`)\n- `display_name` (string)\n- `context` (objeto com campos públicos mínimos: `uf`, `cargo`, `ano` — opcionais porém recomendados)\n- `match`:\n  - `confidence` (numérico 0-1 ou enum; alinhar com `common/confidence`)\n  - `explanation` (array de strings curtas e técnicas; sem linguagem acusatória)\n\nRegras:\n- O schema não deve exigir dados sensíveis.\n- Explicação deve ser técnica (ex.: \"UF=SP\", \"cargo=...\"), sem atribuir culpa/irregularidade.",
+      "impacto": "Padroniza a desambiguação e protege o projeto contra acusações de 'caixa preta'.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/MANIFESTO.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md"
+      ],
+      "definicao_de_pronto": [
+        "`schemas/search/candidate.schema.json` criado",
+        "Schema valida em `pnpm validate`",
+        "Campos obrigatórios e regras de minimização atendidos",
+        "Sem termos acusatórios nos exemplos associados"
+      ]
+    },
+    {
+      "titulo": "Criar JSON Schema: SearchResponse (payload do /search) e exemplo canônico validado",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:schema",
+        "area:examples"
+      ],
+      "visao_geral": "Formalizar a resposta completa do endpoint de busca, incluindo metadados do catálogo e lista de candidatos.",
+      "contexto": "UI e search-api precisam de contrato estável. Além disso, o contrato deve ser auditável: resposta deve trazer versão/snapshot da base usada (catálogo).",
+      "descricao": "Criar `schemas/search/search_response.schema.json` exigindo:\n- `query`:\n  - `normalized` (string)\n  - `hash` (sha256 do normalized)\n  - `raw` deve ser **opcional** ou ausente por padrão (recomendado: não incluir)\n- `catalog`:\n  - `name`, `version`, `snapshot_id`, `source`\n- `candidates`: array de `Candidate`\n\nAdicionar exemplo canônico em `examples/search/search_response.json` que valide no CI.\n\nIncluir headers no OpenAPI (já definido em task anterior) e garantir consistência.",
+      "impacto": "Evita divergência entre UI e backend, padroniza auditoria de versão do catálogo e reduz risco de PII no response.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md"
+      ],
+      "definicao_de_pronto": [
+        "`schemas/search/search_response.schema.json` criado",
+        "`examples/search/search_response.json` criado",
+        "Exemplo valida contra o schema em `pnpm test` (validate_examples)",
+        "Contrato não exige `query.raw`"
+      ]
+    },
+    {
+      "titulo": "Criar JSON Schema: catalog_meta.json (metadados do catálogo do entity-catalog CLI)",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:schema",
+        "area:catalog"
+      ],
+      "visao_geral": "Definir o formato do metadado de catálogo para garantir proveniência, rastreabilidade e versionamento (auditabilidade).",
+      "contexto": "O roadmap prevê catálogo versionado e consumo por search-api. O `catalog_meta.json` é a 'nota fiscal' do catálogo: fontes, hash, versão, QA e artefatos publicados.",
+      "descricao": "Criar `schemas/catalog/catalog_meta.schema.json` com campos obrigatórios:\n- `name`\n- `catalog_version`\n- `snapshot_id`\n- `schema_version`\n- `build_version`\n- `collected_at`\n- `sources[]`: cada item com `name`, `dataset`, `source_url`, `collected_at`, `hash`\n- `artifacts[]`: `file`, `hash`, `rows`\n- `qa`: `report_file`, `passed`, `checks_failed`\n\nAdicionar exemplo em `examples/catalog/catalog_meta.json`.\n\nRegras:\n- Incluir apenas metadados públicos/operacionais.\n- Garantir hash sha256 para artefatos.\n- Referenciar Data Sources na documentação (não no schema).",
+      "impacto": "Base fundamental para auditabilidade e defesa do projeto: prova de versão, fonte e integridade do catálogo.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/DATA_SOURCES.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md"
+      ],
+      "definicao_de_pronto": [
+        "Schema `catalog_meta` criado em `schemas/catalog/`",
+        "Exemplo criado e validado em `pnpm test`",
+        "Campos de hash/versão/fonte presentes e coerentes",
+        "Sem inclusão de PII sensível no contrato"
+      ]
+    },
+    {
+      "titulo": "Criar JSON Schema de observabilidade: LogEvent + ErrorEvent (contratos de logs estruturados)",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:observability",
+        "area:schema"
+      ],
+      "visao_geral": "Padronizar logs estruturados como contrato executável, habilitando auditoria operacional e redução de risco (PII).",
+      "contexto": "O ecossistema precisa de logs consistentes: request_id/run_id, eventos por etapa, status e duração. Sem schema, cada repo loga diferente e você perde rastreabilidade.",
+      "descricao": "Criar em `schemas/observability/`:\n- `log_event.schema.json` (evento normal)\n- `error_event.schema.json` (evento de erro)\n\nRegras mínimas:\n- Campos base: `timestamp`, `level`, `service{name,version}`, `env`, `event{name}`, `correlation{request_id,run_id}`, `status`, `duration_ms`, `data`.\n- `data` deve evitar campos que incentivem PII. Ex.: permitir `query_hash` mas não `q`.\n- `error_event` deve ter `error{code,message}` sem payload sensível.\n\nAdicionar exemplo(s) em `examples/logs/`.\n\nObservação: este repo define o schema; a implementação de emissão fica no `openaudit-observability` (outro repositório).",
+      "impacto": "Habilita auditoria operacional e melhora a capacidade do projeto se defender (mostrar execução, versões, cache_hit, etc.) sem vazar PII.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md"
+      ],
+      "definicao_de_pronto": [
+        "Schemas `log_event` e `error_event` criados",
+        "Exemplos criados e validados em `pnpm test`",
+        "Schema impede/evita campos de PII por design (ex.: `q` não aparece como campo obrigatório/permitido em data)",
+        "Documentado no README quais campos são esperados para search-api e entity-catalog"
+      ]
+    },
+    {
+      "titulo": "Criar registries de observabilidade: metrics_registry.yaml e span_names.yaml",
+      "tags": [
+        "priority:medium",
+        "type:feature",
+        "area:observability",
+        "good first issue"
+      ],
+      "visao_geral": "Padronizar nomes de métricas e spans/traces para evitar fragmentação em dashboards e auditoria.",
+      "contexto": "Métricas e spans mudam rápido; registry evita que cada repo invente nomes diferentes. O core-contracts guarda o catálogo normativo; a emissão fica no repo observability.",
+      "descricao": "Criar `observability/metrics_registry.yaml` com:\n- lista de métricas recomendadas (MVP):\n  - `http_requests_total`\n  - `http_request_duration_ms`\n  - `cache_hit_total`\n  - `search_candidates_returned`\n  - `pipeline_stage_duration_ms`\n- labels permitidos e exemplos.\n\nCriar `observability/span_names.yaml` com:\n- spans recomendados (MVP):\n  - `http.server`\n  - `catalog.search`\n  - `pipeline.stage.ingest|normalize|qa|export`\n\nAdicionar exemplos e instruções de uso em doc curto (pode ser `docs/observability.md` dentro do core-contracts).",
+      "impacto": "Evita divergência de métricas e melhora operação/monitoramento de forma consistente.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+      ],
+      "definicao_de_pronto": [
+        "Arquivos YAML criados",
+        "Registry inclui nomes, descrição, labels e exemplos",
+        "Referenciado no README do core-contracts como convenção oficial"
+      ]
+    },
+    {
+      "titulo": "Implementar validação de exemplos: scripts + testes que garantem que examples/ validam contra schemas/",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:tooling",
+        "area:tests"
+      ],
+      "visao_geral": "Tornar o contrato executável: todo exemplo deve ser um 'golden file' validado automaticamente.",
+      "contexto": "Comunidade contribui mais quando existe feedback rápido. Exemplos validados são a forma mais simples de garantir que contratos são claros e consistentes.",
+      "descricao": "Implementar `scripts/validate_examples.ts` usando AJV:\n- Mapear arquivos em `examples/**` para o schema correspondente.\n- Validar e falhar com mensagens claras (qual arquivo, qual erro, qual schema).\n- Incluir `pnpm test` rodando validate_examples.\n\nDefinir convenção de mapeamento:\n- `examples/search/*.json` valida contra `schemas/search/search_response.schema.json`\n- `examples/catalog/*.json` valida contra `schemas/catalog/catalog_meta.schema.json`\n- `examples/logs/*.json` valida contra `schemas/observability/log_event.schema.json`\n\nAdicionar pelo menos 1 exemplo por categoria.",
+      "impacto": "Evita contratos ambíguos. Reduz bugs em consumidores. Melhora qualidade e confiança da comunidade.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md"
+      ],
+      "definicao_de_pronto": [
+        "Script criado e integrado em `pnpm test`",
+        "Exemplos existentes passam na validação",
+        "Mensagens de erro são acionáveis (arquivo + caminho do schema + detalhe do erro)"
+      ]
+    },
+    {
+      "titulo": "Implementar validação de JSON Schemas e OpenAPI (linters) em scripts e pipeline local",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:tooling",
+        "area:tests"
+      ],
+      "visao_geral": "Garantir que todo schema/OpenAPI no repo é válido, referenciável e consistente.",
+      "contexto": "Core-contracts depende de integridade técnica: `$ref` quebrado ou OpenAPI inválido derruba toda a cadeia de geração e validação.",
+      "descricao": "Implementar:\n- `scripts/validate_schemas.ts`: valida JSON syntax e resolve `$ref` localmente.\n- `scripts/validate_openapi.ts`: valida OpenAPI (ex.: com `@redocly/cli`).\n- Integrar ambos em `pnpm validate`.\n\nRegras:\n- Falhar o comando se houver `$ref` quebrado.\n- Falhar se OpenAPI referenciar schema inexistente.\n- Manter logs curtos e acionáveis.",
+      "impacto": "Previne quebrar os consumidores. Eleva a qualidade do contrato e reduz retrabalho em PRs.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+      ],
+      "definicao_de_pronto": [
+        "`pnpm validate` roda schema validation + openapi validation",
+        "Falhas de `$ref` são detectadas corretamente",
+        "OpenAPI inválido falha com output útil"
+      ]
+    },
+    {
+      "titulo": "Gerar tipos TypeScript (OpenAPI + JSON Schema) e publicar em packages/typescript",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:codegen",
+        "area:typescript"
+      ],
+      "visao_geral": "Permitir que serviços Node/UI consumam contratos sem “JSON de mão”, reduzindo bugs e divergência.",
+      "contexto": "O search-api será Node.js. Tipos TS gerados garantem alinhamento entre contrato e implementação.",
+      "descricao": "Implementar `pnpm generate` para TypeScript:\n- Gerar tipos a partir do OpenAPI (`openapi-typescript`) em `packages/typescript/openapi.d.ts`.\n- Opcional: gerar tipos a partir de JSON Schemas (`json-schema-to-typescript`) para partes que não estejam no OpenAPI.\n- Incluir `packages/typescript/README.md` com instruções de consumo.\n\nPolítica:\n- `packages/typescript` deve ser gerado e commitado (recomendado) OU gerado em CI e publicado em release — escolher e documentar.\n- CI deve falhar se `pnpm generate` gerar diffs não commitados (se a política for commitar gerados).",
+      "impacto": "Acelera desenvolvimento do search-api/ui e reduz bugs de integração.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md"
+      ],
+      "definicao_de_pronto": [
+        "`pnpm generate` cria/atualiza `packages/typescript/`",
+        "README do pacote TS explica consumo e versionamento",
+        "Pipeline local e CI (quando existir) detectam diffs não commitados conforme política"
+      ]
+    },
+    {
+      "titulo": "Gerar modelos Python (Pydantic) a partir de JSON Schemas e publicar em packages/python",
+      "tags": [
+        "priority:high",
+        "type:feature",
+        "area:codegen",
+        "area:python"
+      ],
+      "visao_geral": "Permitir que CLIs e pipelines (ex.: openaudit-entity-catalog) validem artefatos (catalog_meta.json) com modelos gerados.",
+      "contexto": "O entity-catalog será uma CLI em Python. Modelos Pydantic gerados garantem que `catalog_meta.json` e outros artefatos seguem o contrato oficial.",
+      "descricao": "Implementar `pnpm generate` para Python:\n- Usar `datamodel-code-generator` (ou equivalente) para gerar modelos Pydantic de:\n  - `schemas/catalog/catalog_meta.schema.json`\n  - `schemas/observability/log_event.schema.json`\n  - (e demais schemas relevantes)\n- Saída em `packages/python/openaudit_core_contracts/`.\n- Incluir `pyproject.toml` e `README.md` no pacote Python com instruções de instalação via git/tag.\n\nPolítica:\n- Decidir se o pacote Python será publicado no PyPI (futuro) ou consumido via git tags (MVP).",
+      "impacto": "Evita drift de formatos entre CLI e consumidores. Melhora auditabilidade por validação automática de artefatos.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+      ],
+      "definicao_de_pronto": [
+        "`pnpm generate` cria/atualiza `packages/python/`",
+        "Pacote Python instalável localmente (ex.: `pip install -e packages/python` ou via git)",
+        "Exemplo de validação no README (validar `catalog_meta.json` com Pydantic)"
+      ]
+    },
+    {
+      "titulo": "Adicionar workflow GitHub Actions: validate + test + generate (fail se geração não estiver atualizada)",
+      "tags": [
+        "priority:high",
+        "type:ci",
+        "area:tooling"
+      ],
+      "visao_geral": "Automatizar garantia de qualidade: PR só entra se contratos e exemplos estiverem válidos e geração de tipos estiver consistente.",
+      "contexto": "Core-contracts é o 'ponto central' do ecossistema. Sem CI, mudanças quebram silenciosamente os consumidores.",
+      "descricao": "Criar `.github/workflows/ci.yml` com steps:\n- checkout\n- setup Node 22\n- install (pnpm)\n- `pnpm validate`\n- `pnpm test`\n- `pnpm generate`\n- verificar diffs (ex.: `git diff --exit-code`) para garantir que artefatos gerados estão commitados (se essa for a política)\n\nOpcional:\n- cache de pnpm\n- matrix node versions (apenas se necessário)\n\nIncluir badges no README.",
+      "impacto": "Evita regressões, aumenta confiança da comunidade e garante compatibilidade contínua.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md"
+      ],
+      "definicao_de_pronto": [
+        "Workflow criado e executa em PR/push",
+        "CI falha quando schema/OpenAPI/examples estão inválidos",
+        "CI falha quando geração não está atualizada (conforme política do repo)",
+        "README com badge do workflow"
+      ]
+    },
+    {
+      "titulo": "Criar CHANGELOG.md + política de versionamento SemVer e checklist de breaking changes",
+      "tags": [
+        "priority:medium",
+        "type:docs",
+        "area:governance",
+        "good first issue"
+      ],
+      "visao_geral": "Evitar breaking changes ocultas e tornar evolução do contrato transparente e previsível.",
+      "contexto": "Core-contracts governa compatibilidade. Mudança pequena no schema pode quebrar serviços. Sem SemVer e changelog, a comunidade perde previsibilidade.",
+      "descricao": "Adicionar:\n- `CHANGELOG.md` seguindo SemVer.\n- Seção no README: regras de MAJOR/MINOR/PATCH.\n- Checklist (pode ser `docs/breaking-change-checklist.md`) com exemplos do que é breaking:\n  - remover campo\n  - mudar tipo\n  - mudar enum\n  - tornar obrigatório\n  - alterar semântica\n\nRecomendação:\n- Criar template de PR com campo `breaking_change: yes/no` e instrução de bump.",
+      "impacto": "Aumenta maturidade do projeto e reduz quebras em cascata no ecossistema.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md"
+      ],
+      "definicao_de_pronto": [
+        "CHANGELOG.md criado",
+        "Política SemVer documentada no README",
+        "Checklist de breaking changes criado e referenciado"
+      ]
+    },
+    {
+      "titulo": "Adicionar templates de contribuição: ISSUE_TEMPLATE e PULL_REQUEST_TEMPLATE focados em contratos",
+      "tags": [
+        "priority:medium",
+        "type:docs",
+        "area:community",
+        "good first issue"
+      ],
+      "visao_geral": "Guiar contribuidores sem contexto: qualquer issue/PR deve declarar impacto, risco e compatibilidade.",
+      "contexto": "Contribuidores externos precisam de estrutura. Em contratos, a falta de rigor vira quebra de compatibilidade e risco reputacional (PII, linguagem acusatória).",
+      "descricao": "Criar:\n- `.github/ISSUE_TEMPLATE/contract-change.yml` com campos:\n  - motivação\n  - quais schemas/openapi serão afetados\n  - exemplos antes/depois\n  - impacto (breaking?)\n  - referência ao ROADMAP\n  - checklist de risco (PII, linguagem)\n\n- `.github/PULL_REQUEST_TEMPLATE.md` com:\n  - tipo de mudança (schema/openapi/examples/tooling)\n  - breaking change? bump SemVer?\n  - exemplos atualizados?\n  - `pnpm validate/test/generate` rodou?\n  - verificação de RISK_POLICY (PII / termos proibidos)\n\nReferenciar docs oficiais do projeto no template.",
+      "impacto": "Reduz PRs ruins, acelera revisão e mantém projeto juridicamente defensável.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/GOVERNANCE.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+      ],
+      "definicao_de_pronto": [
+        "Templates adicionados em `.github/`",
+        "Campos cobrem compatibilidade, risco e testes",
+        "README aponta para o fluxo de contribuição"
+      ]
+    },
+    {
+      "titulo": "Documentar 'Contrato de Privacidade' no core-contracts: campos proibidos, PII e vocabulário neutro",
+      "tags": [
+        "priority:high",
+        "type:docs",
+        "area:risk",
+        "area:security"
+      ],
+      "visao_geral": "Explicitar regras que protegem o projeto contra abuso: PII e linguagem acusatória não devem aparecer em contratos, exemplos e logs.",
+      "contexto": "O projeto é sensível e pode sofrer ataques jurídicos/políticos. A documentação precisa ser explícita para evitar contribuições que aumentem risco.",
+      "descricao": "Criar documento `docs/privacy-and-language.md` (ou seção no README) com:\n- Lista de campos/propriedades proibidas em exemplos/logs (ex.: `q` bruto, CPF, auth headers).\n- Princípio: preferir `hash`/mascaramento.\n- Vocabulário neutro obrigatório em exemplos (`padrão atípico`, `inconsistência`, etc.).\n- Diretriz: contratos não devem induzir 'acusação' nem 'ranking moral'.\n\nAdicionar referência direta aos documentos de risco/metodologia e exemplos do que NÃO fazer.",
+      "impacto": "Reduz risco de PII e acusações indevidas desde o nível de contrato. Facilita moderação e revisão.",
+      "referencias": [
+        "https://github.com/OpenAudit-Brasil/openaudit-core-contracts/blob/main/README.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/MANIFESTO.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/RISK_POLICY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/METHODOLOGY.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/CODE_OF_CONDUCT.md",
+        "https://github.com/OpenAudit-Brasil/About/blob/main/SECURITY.md"
+      ],
+      "definicao_de_pronto": [
+        "Documento criado e referenciado no README",
+        "Regras de PII e linguagem neutra explicitadas com exemplos",
+        "Checklist para revisão de exemplos/logs incluído"
+      ]
+    }
+  ]
+}

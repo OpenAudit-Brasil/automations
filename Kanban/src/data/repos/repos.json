@@ -1,0 +1,20 @@
+{
+    "repos": [
+        {
+            "name": "openaudit-core-contracts",
+            "url": "https://github.com/OpenAudit-Brasil/openaudit-core-contracts"
+        },
+        {
+            "name": "openaudit-entity-catalog",
+            "url": "https://github.com/OpenAudit-Brasil/openaudit-entity-catalog"
+        },
+        {
+            "name": "openaudit-observability",
+            "url": "https://github.com/OpenAudit-Brasil/openaudit-observability"
+        },
+        {
+            "name": "openaudit-search-api",
+            "url": "https://github.com/OpenAudit-Brasil/openaudit-search-api"
+        }
+    ]
+}

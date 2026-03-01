@@ -1,0 +1,1215 @@
+{
+    "schema": {
+        "name": "openauditbrasil.github_projects_automation_spec",
+        "version": "1.0.0",
+        "generated_at": "2026-02-28",
+        "timezone": "America/Sao_Paulo",
+        "purpose": [
+            "Serve as a machine-readable blueprint to (1) create/configure GitHub Projects (v2) for the OpenAudit Brasil organization and (2) seed the project with initial work items aligned with the official docs.",
+            "Provide a single source of truth for contributors: mission, boundaries, risk controls, methodology, architecture, and roadmap."
+        ]
+    },
+    "github": {
+        "platform": "github.com",
+        "organization": {
+            "login": "OpenAudit-Brasil",
+            "projects_index_url": "https://github.com/orgs/OpenAudit-Brasil/projects"
+        },
+        "api": {
+            "graphql_endpoint": "https://api.github.com/graphql",
+            "auth": {
+                "recommended": [
+                    {
+                        "method": "GitHub App installation token",
+                        "notes": [
+                            "Preferred for CI automation and least-privilege setups.",
+                            "Ensure the app has Projects permissions and, if linking a repository during project creation, repository Contents permission as required by GitHub."
+                        ]
+                    },
+                    {
+                        "method": "Personal Access Token (classic)",
+                        "required_scopes": [
+                            "project"
+                        ],
+                        "read_only_scopes": [
+                            "read:project"
+                        ],
+                        "notes": [
+                            "Simpler to bootstrap locally; rotate and store securely."
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "project_docs": {
+        "source_of_truth_repo": {
+            "name": "About",
+            "full_name": "OpenAudit-Brasil/About",
+            "urls": {
+                "readme": "https://github.com/OpenAudit-Brasil/About/blob/main/README.md",
+                "roadmap": "https://github.com/OpenAudit-Brasil/About/blob/main/ROADMAP.md"
+            }
+        },
+        "documents": [
+            {
+                "doc_id": "README",
+                "title": "README",
+                "type": "overview",
+                "path": "README.md",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/README.md",
+                "version": null,
+                "status": "present",
+                "required_reading": true
+            },
+            {
+                "doc_id": "ROADMAP",
+                "title": "Roadmap — Proposta Técnica de Arquitetura e Requisitos",
+                "type": "architecture_and_requirements",
+                "path": "ROADMAP.md",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/ROADMAP.md",
+                "version": "v0.0.1",
+                "status": "present",
+                "required_reading": true
+            },
+            {
+                "doc_id": "MANIFESTO",
+                "title": "Manifesto",
+                "type": "normative",
+                "path": "MANIFESTO.md",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/MANIFESTO.md",
+                "version": "v1.0.0",
+                "status": "present",
+                "required_reading": true
+            },
+            {
+                "doc_id": "METHODOLOGY",
+                "title": "Metodologia",
+                "type": "normative",
+                "path": "METHODOLOGY.md",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/METHODOLOGY.md",
+                "version": "v1.0.0",
+                "status": "present",
+                "required_reading": true
+            },
+            {
+                "doc_id": "RISK_POLICY",
+                "title": "Política de Risco",
+                "type": "normative",
+                "path": "RISK_POLICY.md",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/RISK_POLICY.md",
+                "version": "v1.0.0",
+                "status": "present",
+                "required_reading": true
+            },
+            {
+                "doc_id": "GOVERNANCE",
+                "title": "Governança do Projeto",
+                "type": "normative",
+                "path": "GOVERNANCE.md",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/GOVERNANCE.md",
+                "version": "v1.0.0",
+                "status": "present",
+                "required_reading": true
+            },
+            {
+                "doc_id": "CODE_OF_CONDUCT",
+                "title": "Código de Conduta",
+                "type": "normative",
+                "path": "CODE_OF_CONDUCT.md",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/CODE_OF_CONDUCT.md",
+                "version": "v1.0.0",
+                "status": "present",
+                "required_reading": true
+            },
+            {
+                "doc_id": "SECURITY",
+                "title": "Política de Segurança",
+                "type": "normative",
+                "path": "SECURITY.md",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/SECURITY.md",
+                "version": "v1.0.0",
+                "status": "present",
+                "required_reading": true
+            },
+            {
+                "doc_id": "DECISIONS",
+                "title": "Registro de Decisões",
+                "type": "governance_log",
+                "path": "DECISIONS.md",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/DECISIONS.md",
+                "version": null,
+                "status": "expected",
+                "required_reading": false
+            },
+            {
+                "doc_id": "CONTRIBUTING",
+                "title": "Como contribuir",
+                "type": "process",
+                "path": "CONTRIBUTING.md",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/CONTRIBUTING.md",
+                "version": null,
+                "status": "expected",
+                "required_reading": false
+            },
+            {
+                "doc_id": "LICENSE",
+                "title": "Licença",
+                "type": "legal",
+                "path": "LICENSE",
+                "repo": "OpenAudit-Brasil/About",
+                "raw_url": "https://raw.githubusercontent.com/OpenAudit-Brasil/About/main/LICENSE",
+                "version": null,
+                "status": "expected",
+                "required_reading": false
+            }
+        ]
+    },
+    "project_overview": {
+        "name": "OpenAudit Brasil",
+        "tagline": "Infraestrutura aberta para análise responsável, reprodutível e auditável de dados públicos",
+        "core_goal": "Build open, auditable infrastructure that produces explainable technical indicators from officially published public datasets, with strict risk controls and no accusatory outputs.",
+        "what_it_is": [
+            "A technical infrastructure for structured public data analysis",
+            "A reproducible pipeline: source → snapshot → transform → quality → indicators → report → audit trail",
+            "A framework for deterministic indicators (anomaly / divergence / inconsistency) with explicit limitations",
+            "Optionally, an AI plug-in layer that outputs hypotheses (never conclusions) and must reference evidence already present in the report"
+        ],
+        "what_it_is_not": [
+            "A tool to accuse or label people",
+            "A ranking of wrongdoing",
+            "An automated denunciation system",
+            "A replacement for competent authorities"
+        ],
+        "non_negotiables": {
+            "language_policy": {
+                "allowed_terms": [
+                    "indicador técnico",
+                    "padrão atípico",
+                    "anomalia estatística",
+                    "inconsistência estrutural",
+                    "divergência documental",
+                    "sinal analítico",
+                    "hipótese alternativa legítima",
+                    "limitação",
+                    "incerteza",
+                    "falso positivo"
+                ],
+                "banned_terms_examples": [
+                    "corrupção",
+                    "fraude",
+                    "crime",
+                    "ilegal",
+                    "suspeito",
+                    "culpado",
+                    "denúncia",
+                    "prova",
+                    "comprovado"
+                ]
+            },
+            "data_access_policy": {
+                "only_official_public": true,
+                "no_login_no_bypass": true,
+                "respect_tos": true,
+                "default_local_first": true
+            },
+            "output_policy": {
+                "always_disclaimer": true,
+                "no_pii_by_default": true,
+                "no_conclusions": true,
+                "every_indicator_explainable": true
+            }
+        },
+        "community": {
+            "discord_invite": "https://discord.gg/KJAJPWGDBW",
+            "website": "https://openauditbrasil.com/"
+        }
+    },
+    "roadmap_model": {
+        "version": "v0.0.1",
+        "macro_flow": [
+            "search(list)",
+            "explicit_selection",
+            "pipeline_processing",
+            "deterministic_indicators",
+            "optional_ai_hypotheses",
+            "structured_report",
+            "audit_trail"
+        ],
+        "phases": [
+            {
+                "phase_id": "PH-00",
+                "name": "Fundamentos (documentação e governança)",
+                "deliverables": [
+                    "Docs normativos publicados e versionados (manifesto/metodologia/risco/governança/segurança/código de conduta)",
+                    "Templates e labels para issues/PRs com risco",
+                    "Branch protection + CI mínimo"
+                ],
+                "definition_of_done": [
+                    "Vocabulário controlado aplicado",
+                    "Gate de risco operacional (risk-review:required)",
+                    "Fluxo de RFC e DECISIONS ativo"
+                ],
+                "references": [
+                    "MANIFESTO",
+                    "METHODOLOGY",
+                    "RISK_POLICY",
+                    "GOVERNANCE",
+                    "CODE_OF_CONDUCT",
+                    "SECURITY",
+                    "ROADMAP"
+                ]
+            },
+            {
+                "phase_id": "PH-01",
+                "name": "MVP Search + Entity Catalog (sem cruzamento)",
+                "deliverables": [
+                    "Serviço /search",
+                    "Catálogo mínimo para entity_id canônico",
+                    "UI/CLI para busca → lista de candidatos (confidence + explanation)"
+                ],
+                "definition_of_done": [
+                    "Busca retorna lista de candidatos; não auto-seleciona",
+                    "Seleção explícita antes de processar",
+                    "Auditoria básica do search (sem PII)"
+                ],
+                "references": [
+                    "ROADMAP",
+                    "RISK_POLICY",
+                    "METHODOLOGY"
+                ]
+            },
+            {
+                "phase_id": "PH-02",
+                "name": "MVP Analyze (1–2 fontes) + relatório auditável",
+                "deliverables": [
+                    "/analyze com run_id e status",
+                    "1 conector oficial + transformer",
+                    "Quality gate mínimo",
+                    "3–5 indicadores determinísticos simples e explicáveis",
+                    "Cache versionado + cache_hit no audit"
+                ],
+                "definition_of_done": [
+                    "Relatório estruturado: summary/entities/facts/indicators/sources/audit",
+                    "Inclui snapshots/hashes/versões",
+                    "Sem linguagem acusatória e sem PII por padrão"
+                ],
+                "references": [
+                    "ROADMAP",
+                    "METHODOLOGY",
+                    "RISK_POLICY",
+                    "SECURITY"
+                ]
+            },
+            {
+                "phase_id": "PH-03",
+                "name": "Camada IA plugável (multi-agente) — hipóteses assistidas",
+                "deliverables": [
+                    "Interface AiAgent + orchestrator",
+                    "Agregador de consenso/divergência",
+                    "Policy guard (bloquear linguagem proibida e PII)",
+                    "Auditoria completa da IA (hashes, versões, prompts/policies)"
+                ],
+                "definition_of_done": [
+                    "IA só gera hipóteses com evidence_refs",
+                    "Registro em audit.ai[] (input_hash/output_hash etc.)",
+                    "Cache keys incluem ai_config_hash"
+                ],
+                "references": [
+                    "ROADMAP",
+                    "RISK_POLICY",
+                    "METHODOLOGY",
+                    "SECURITY"
+                ]
+            },
+            {
+                "phase_id": "PH-04",
+                "name": "Escalar conectores + qualidade + observabilidade",
+                "deliverables": [
+                    "+2–3 conectores (sujeito a viabilidade/ToS)",
+                    "Observabilidade (traces/métricas/logs) com run_id",
+                    "Regressão de indicadores + golden datasets"
+                ],
+                "definition_of_done": [
+                    "Pipeline estável, repetível e monitorável",
+                    "Conectores com rate limit/backoff e source records"
+                ],
+                "references": [
+                    "METHODOLOGY",
+                    "SECURITY",
+                    "RISK_POLICY",
+                    "ROADMAP"
+                ]
+            },
+            {
+                "phase_id": "PH-05",
+                "name": "Entity Resolution avançado (quando necessário)",
+                "deliverables": [
+                    "Linkage probabilístico com calibração",
+                    "Decisões humanas persistidas (merge/não-merge) com rastreabilidade",
+                    "UI de desambiguação avançada (apenas quando necessário)"
+                ],
+                "definition_of_done": [
+                    "Redução mensurável de falso positivo em ER",
+                    "Match explanation obrigatório"
+                ],
+                "references": [
+                    "METHODOLOGY",
+                    "RISK_POLICY",
+                    "ROADMAP"
+                ]
+            },
+            {
+                "phase_id": "PH-06",
+                "name": "Export controlado e pacote auditável",
+                "deliverables": [
+                    "Export agregado (sem PII por padrão)",
+                    "Pacote auditável (metadados + hashes + versões + metodologia)",
+                    "Links compartilháveis com expiração (se existirem)"
+                ],
+                "definition_of_done": [
+                    "Compartilhamento não vira ferramenta de perseguição",
+                    "Gates risk:high aplicados + decisão registrada"
+                ],
+                "references": [
+                    "RISK_POLICY",
+                    "SECURITY",
+                    "GOVERNANCE",
+                    "METHODOLOGY"
+                ]
+            }
+        ]
+    },
+    "github_projects_v2_blueprint": {
+        "projects_to_manage": [
+            {
+                "project_key": "openaudit_roadmap",
+                "desired_owner": {
+                    "type": "organization",
+                    "login": "OpenAudit-Brasil"
+                },
+                "title": "OpenAudit Brasil — Roadmap",
+                "visibility": "public",
+                "short_description": "Roadmap e triagem de contribuições do OpenAudit Brasil (projeto técnico, neutro e auditável).",
+                "long_description_markdown": "Infraestrutura aberta para análise responsável, reprodutível e auditável de dados públicos.\n\n**Regras de ouro:** não acusa, não julga, não facilita perseguição. Resultados são *indicadores técnicos* com limitações explícitas.\n\nDocs de referência:\n- README.md (visão geral)\n- ROADMAP.md (arquitetura e requisitos)\n- MANIFESTO.md / METHODOLOGY.md / RISK_POLICY.md / GOVERNANCE.md / CODE_OF_CONDUCT.md / SECURITY.md\n\nComo usar este projeto:\n1) Abra uma issue com contexto, motivação e risco\n2) Use labels e campos do Project (Risk/Area/Type)\n3) Mudanças sensíveis exigem RFC + risk-review + registro em DECISIONS.md",
+                "repositories_to_link": [
+                    {
+                        "full_name": "OpenAudit-Brasil/About",
+                        "purpose": "Docs e governança"
+                    }
+                ],
+                "fields": {
+                    "built_in": [
+                        {
+                            "name": "Status",
+                            "notes": "Used by board columns; default options typically include Todo/In Progress/Done."
+                        }
+                    ],
+                    "custom": [
+                        {
+                            "field_key": "phase",
+                            "name": "Phase",
+                            "type": "single_select",
+                            "options": [
+                                "PH-00",
+                                "PH-01",
+                                "PH-02",
+                                "PH-03",
+                                "PH-04",
+                                "PH-05",
+                                "PH-06"
+                            ],
+                            "default": "PH-00",
+                            "notes": "Align items with ROADMAP phases. Useful for Roadmap (timeline) grouping."
+                        },
+                        {
+                            "field_key": "oa_workflow",
+                            "name": "OA Workflow",
+                            "type": "single_select",
+                            "options": [
+                                "Backlog",
+                                "Ready",
+                                "In Progress",
+                                "Blocked",
+                                "In Review",
+                                "Done"
+                            ],
+                            "default": "Backlog",
+                            "notes": "Recommended grouping field for a custom Board view (manual view setup may be needed)."
+                        },
+                        {
+                            "field_key": "risk",
+                            "name": "Risk",
+                            "type": "single_select",
+                            "options": [
+                                "risk:low",
+                                "risk:medium",
+                                "risk:high"
+                            ],
+                            "default": "risk:low"
+                        },
+                        {
+                            "field_key": "type",
+                            "name": "Type",
+                            "type": "single_select",
+                            "options": [
+                                "feature",
+                                "bug",
+                                "docs",
+                                "security",
+                                "governance",
+                                "research",
+                                "chore"
+                            ],
+                            "default": "feature"
+                        },
+                        {
+                            "field_key": "area",
+                            "name": "Area",
+                            "type": "single_select",
+                            "options": [
+                                "core",
+                                "connectors",
+                                "schemas",
+                                "analysis",
+                                "ui",
+                                "docs",
+                                "devops",
+                                "legal",
+                                "community"
+                            ],
+                            "default": "docs"
+                        },
+                        {
+                            "field_key": "priority",
+                            "name": "Priority",
+                            "type": "single_select",
+                            "options": [
+                                "P0",
+                                "P1",
+                                "P2",
+                                "P3"
+                            ],
+                            "default": "P2"
+                        },
+                        {
+                            "field_key": "effort_points",
+                            "name": "Effort (pts)",
+                            "type": "number",
+                            "default": 3,
+                            "notes": "Optional. Use for capacity planning and field sums in grouped views."
+                        },
+                        {
+                            "field_key": "start_date",
+                            "name": "Start date",
+                            "type": "date"
+                        },
+                        {
+                            "field_key": "target_date",
+                            "name": "Target date",
+                            "type": "date"
+                        },
+                        {
+                            "field_key": "rfc_required",
+                            "name": "RFC required",
+                            "type": "single_select",
+                            "options": [
+                                "no",
+                                "yes"
+                            ],
+                            "default": "no"
+                        },
+                        {
+                            "field_key": "risk_review_required",
+                            "name": "Risk review required",
+                            "type": "single_select",
+                            "options": [
+                                "no",
+                                "yes"
+                            ],
+                            "default": "no"
+                        },
+                        {
+                            "field_key": "docs_refs",
+                            "name": "Docs refs",
+                            "type": "text",
+                            "notes": "Store comma-separated doc_ids or links; keeps item self-contained for reviewers."
+                        }
+                    ]
+                },
+                "recommended_views": [
+                    {
+                        "view_key": "backlog_table",
+                        "name": "Backlog (Table)",
+                        "layout": "table",
+                        "sort": [
+                            {
+                                "field": "Priority",
+                                "direction": "asc"
+                            },
+                            {
+                                "field": "Target date",
+                                "direction": "asc"
+                            }
+                        ],
+                        "group_by": "OA Workflow",
+                        "filters": [
+                            {
+                                "field": "OA Workflow",
+                                "operator": "in",
+                                "value": [
+                                    "Backlog",
+                                    "Ready"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "view_key": "execution_board",
+                        "name": "Execution (Board)",
+                        "layout": "board",
+                        "group_by": "OA Workflow",
+                        "filters": [
+                            {
+                                "field": "OA Workflow",
+                                "operator": "not_in",
+                                "value": [
+                                    "Done"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "view_key": "roadmap_timeline",
+                        "name": "Roadmap (Timeline)",
+                        "layout": "roadmap",
+                        "group_by": "Phase",
+                        "notes": "Requires an additional field 'Phase' (single_select) if you want grouping; otherwise group by Area or Risk."
+                    },
+                    {
+                        "view_key": "risk_table",
+                        "name": "Risk (Table)",
+                        "layout": "table",
+                        "group_by": "Risk",
+                        "filters": []
+                    }
+                ],
+                "known_api_limitations": [
+                    "Project views (table/board/roadmap) creation/editing may not be fully supported via API; plan for a one-time manual setup and keep the desired config here as documentation for humans/automation tooling.",
+                    "The built-in Status field option management (create/edit/delete options) is limited; automation should prefer custom single-select fields (e.g., OA Workflow) for stable workflows."
+                ]
+            }
+        ]
+    },
+    "automation_execution_plan": {
+        "bootstrap_steps": [
+            {
+                "step": 1,
+                "name": "Resolve organization node id",
+                "why": "GraphQL mutations require ownerId.",
+                "graphql": {
+                    "operation_name": "GetOrgId",
+                    "query": "query GetOrgId($login:String!){ organization(login:$login){ id login } }",
+                    "variables": {
+                        "login": "OpenAudit-Brasil"
+                    }
+                }
+            },
+            {
+                "step": 2,
+                "name": "Create (or locate) the target ProjectV2",
+                "graphql": {
+                    "operation_name": "CreateProject",
+                    "query": "mutation CreateProject($input:CreateProjectV2Input!){ createProjectV2(input:$input){ projectV2{ id number title } } }",
+                    "variables_template": {
+                        "input": {
+                            "ownerId": "${ORG_ID}",
+                            "title": "OpenAudit Brasil — Roadmap"
+                        }
+                    },
+                    "notes": [
+                        "If the project already exists, query and reuse it instead of recreating."
+                    ]
+                }
+            },
+            {
+                "step": 3,
+                "name": "Discover field IDs and option IDs",
+                "graphql": {
+                    "operation_name": "GetProjectFields",
+                    "query": "query GetProjectFields($org:String!, $number:Int!){ organization(login:$org){ projectV2(number:$number){ id title fields(first:50){ nodes{ ... on ProjectV2FieldCommon{ id name dataType } ... on ProjectV2SingleSelectField{ id name options{ id name } } } } } } }",
+                    "variables_template": {
+                        "org": "OpenAudit-Brasil",
+                        "number": "${PROJECT_NUMBER}"
+                    }
+                },
+                "outputs_to_store": [
+                    "project_id",
+                    "field_id_map (by name)",
+                    "single_select_option_id_map (by field name -> option name)"
+                ]
+            },
+            {
+                "step": 4,
+                "name": "Create custom fields (idempotent)",
+                "graphql": {
+                    "operation_name": "CreateFields",
+                    "notes": [
+                        "Use createProjectV2Field* mutations (text/number/date/single-select/iteration) when available; otherwise mark as manual.",
+                        "When creating single-select fields, store resulting option IDs."
+                    ]
+                }
+            },
+            {
+                "step": 5,
+                "name": "Seed project with initial items (draft issues or linked issues)",
+                "graphql": {
+                    "operation_name": "AddDraftIssue",
+                    "query": "mutation AddDraft($input:AddProjectV2DraftIssueInput!){ addProjectV2DraftIssue(input:$input){ projectItem{ id } } }",
+                    "variables_template": {
+                        "input": {
+                            "projectId": "${PROJECT_ID}",
+                            "title": "${ITEM_TITLE}",
+                            "body": "${ITEM_BODY_MD}"
+                        }
+                    }
+                }
+            },
+            {
+                "step": 6,
+                "name": "Set field values for each project item",
+                "graphql": {
+                    "operation_name": "UpdateFieldValue",
+                    "query": "mutation UpdateField($input:UpdateProjectV2ItemFieldValueInput!){ updateProjectV2ItemFieldValue(input:$input){ projectV2Item{ id } } }",
+                    "variables_template_examples": [
+                        {
+                            "input": {
+                                "projectId": "${PROJECT_ID}",
+                                "itemId": "${ITEM_ID}",
+                                "fieldId": "${FIELD_ID_RISK}",
+                                "value": {
+                                    "singleSelectOptionId": "${OPTION_ID_risk:medium}"
+                                }
+                            }
+                        },
+                        {
+                            "input": {
+                                "projectId": "${PROJECT_ID}",
+                                "itemId": "${ITEM_ID}",
+                                "fieldId": "${FIELD_ID_docs_refs}",
+                                "value": {
+                                    "text": "ROADMAP,METHODOLOGY,RISK_POLICY"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "recommended_automation_runtime": [
+            {
+                "tool": "GitHub Actions",
+                "notes": [
+                    "Use a workflow to sync issues/PRs into the org project and keep fields updated."
+                ]
+            },
+            {
+                "tool": "GitHub CLI (gh)",
+                "notes": [
+                    "Useful locally for bootstrapping and debugging GraphQL calls."
+                ]
+            }
+        ]
+    },
+    "contribution_system": {
+        "roles": [
+            {
+                "role": "Maintainer",
+                "responsibilities": [
+                    "final merge authority",
+                    "architecture direction",
+                    "risk enforcement"
+                ]
+            },
+            {
+                "role": "Risk Reviewer",
+                "responsibilities": [
+                    "privacy/LGPD gate",
+                    "defamation/targeting risk gate",
+                    "ToS/licensing gate"
+                ]
+            },
+            {
+                "role": "Reviewer",
+                "responsibilities": [
+                    "technical reviews",
+                    "tests/docs quality checks"
+                ]
+            },
+            {
+                "role": "Contributor",
+                "responsibilities": [
+                    "issues, PRs, docs, tests"
+                ]
+            }
+        ],
+        "required_process": {
+            "issue_first": true,
+            "rfc_required_when": [
+                "new data source connector",
+                "new indicator or changes to indicator thresholds",
+                "any output that may be interpreted as accusatory",
+                "export/sharing features",
+                "storage/distribution of datasets",
+                "changes to risk policy/methodology/manifesto",
+                "features involving political figures/elections"
+            ],
+            "risk_review_required_when": [
+                "PII/identifiers involved (even if in public sources)",
+                "any feature that increases targeting/doxxing risk",
+                "scraping/ToS uncertainty",
+                "publish derived datasets",
+                "shareable links or exports",
+                "search features for persons/politicians"
+            ]
+        },
+        "labels_catalog": {
+            "type": [
+                "type:bug",
+                "type:feature",
+                "type:docs",
+                "type:security",
+                "type:governance",
+                "type:research"
+            ],
+            "area": [
+                "area:core",
+                "area:connectors",
+                "area:schemas",
+                "area:analysis",
+                "area:ui",
+                "area:docs",
+                "area:devops",
+                "area:legal",
+                "area:community"
+            ],
+            "risk": [
+                "risk:low",
+                "risk:medium",
+                "risk:high"
+            ],
+            "process": [
+                "governance:rfc-required",
+                "risk-review:required",
+                "status:needs-info",
+                "status:ready",
+                "status:blocked"
+            ]
+        },
+        "pr_template_minimum_checklist": [
+            "No accusatory language in code/docs/UI/outputs",
+            "No PII in logs, fixtures, examples (masked if unavoidable)",
+            "Indicators include evidence + limitations + alt hypotheses + confidence",
+            "run_record/audit fields updated if pipeline behavior changes",
+            "If risk:high: includes risk mitigation + rollback plan + DECISIONS entry"
+        ]
+    },
+    "architecture": {
+        "style": "plug_and_play",
+        "execution_model": "offline_first (default) + optional backend orchestrator",
+        "core_components": [
+            {
+                "name": "Search Engine",
+                "responsibility": "Free-text search → candidate entities list with match confidence/explanation"
+            },
+            {
+                "name": "Entity Catalog",
+                "responsibility": "Canonical entity_id store + aliases/context"
+            },
+            {
+                "name": "Analyze Orchestrator",
+                "responsibility": "Coordinates phase-2 pipeline; enforces cache, risk guards, audit"
+            },
+            {
+                "name": "Connectors",
+                "responsibility": "Collect raw snapshots from approved sources with rate limit/backoff"
+            },
+            {
+                "name": "Transformers",
+                "responsibility": "Map raw snapshots → canonical schema datasets (versioned)"
+            },
+            {
+                "name": "Quality Gate",
+                "responsibility": "Data quality checks; produces QualityReport and affects confidence"
+            },
+            {
+                "name": "Deterministic Indicators Engine",
+                "responsibility": "Compute explainable indicators (deterministic) with evidence and limitations"
+            },
+            {
+                "name": "AI Agent Orchestrator (optional)",
+                "responsibility": "Run N agents; aggregate consensus/divergence; enforce policy guard"
+            },
+            {
+                "name": "Report Builder",
+                "responsibility": "Produce structured report JSON with disclaimers, sources, and audit section"
+            },
+            {
+                "name": "Audit Store",
+                "responsibility": "Persist run_record + lineage + cache metadata"
+            },
+            {
+                "name": "Observability",
+                "responsibility": "Structured logs (no PII), metrics, traces with run_id"
+            }
+        ],
+        "interfaces": {
+            "connector": {
+                "inputs": [
+                    "entity_id",
+                    "query_context",
+                    "source_config"
+                ],
+                "outputs": [
+                    "RawSnapshot{snapshot_id, source, collected_at, uri, hash, payload_ref}"
+                ]
+            },
+            "transformer": {
+                "inputs": [
+                    "RawSnapshot"
+                ],
+                "outputs": [
+                    "NormalizedDataset{dataset_name, schema_version, rows_ref, hash}"
+                ]
+            },
+            "quality_check": {
+                "inputs": [
+                    "NormalizedDataset"
+                ],
+                "outputs": [
+                    "QualityReport{passed, checks[], severity, notes[]}"
+                ]
+            },
+            "indicator": {
+                "inputs": [
+                    "EntityProfile",
+                    "NormalizedDatasets[]",
+                    "QualityReports[]"
+                ],
+                "outputs": [
+                    "IndicatorResult{id, evidence, confidence, limitations, alt_hypotheses}"
+                ]
+            },
+            "ai_agent": {
+                "inputs": [
+                    "AiContext{entity_profile,facts,indicators,sources,quality_reports,constraints} (sanitized)"
+                ],
+                "outputs": [
+                    "AiFinding{finding_id,title,description,confidence,evidence_refs[],limitations[],alt_hypotheses[],agent_meta,consensus?}"
+                ],
+                "hard_rules": [
+                    "Agent must not introduce new facts",
+                    "Every finding must reference evidence_refs",
+                    "No banned terms",
+                    "No PII by default"
+                ]
+            }
+        },
+        "report_contract": {
+            "sections": [
+                "summary",
+                "entities",
+                "facts",
+                "indicators",
+                "ai_findings",
+                "sources",
+                "audit"
+            ],
+            "audit_minimum": [
+                "run_id",
+                "created_at",
+                "pipeline_version",
+                "params_hash",
+                "cache{hit,key,created_at,ttl_seconds}",
+                "snapshots[] (ids/hashes)",
+                "ai[] (if enabled)"
+            ],
+            "required_disclaimers": {
+                "block_A_non_accusation": "Este resultado é um indicador técnico. Não constitui prova, denúncia, acusação ou afirmação de irregularidade.",
+                "block_B_limitations": "Resultados dependem da qualidade/completude dos dados e podem conter falsos positivos.",
+                "block_C_methodology": "Metodologia e critérios: ver METHODOLOGY.md (versão vigente)."
+            }
+        }
+    },
+    "risk_controls": {
+        "risk_levels": [
+            "risk:low",
+            "risk:medium",
+            "risk:high"
+        ],
+        "gates": {
+            "risk:low": {
+                "approvals": [
+                    "reviewer_or_maintainer"
+                ],
+                "decisions_log_required": false
+            },
+            "risk:medium": {
+                "approvals": [
+                    "maintainer",
+                    "reviewer"
+                ],
+                "decisions_log_required": false
+            },
+            "risk:high": {
+                "approvals": [
+                    "maintainer",
+                    "risk_reviewer"
+                ],
+                "decisions_log_required": true
+            }
+        },
+        "absolute_prohibitions": [
+            "accusatory language anywhere (docs/code/ui/outputs)",
+            "rankings that imply wrongdoing (e.g., 'top suspects', 'fraud score')",
+            "doxxing/targeting features",
+            "scraping/bypass of login/captcha/session or ToS-evasive collection",
+            "hosting/distributing default datasets with identifiable personal data"
+        ],
+        "pii_handling": {
+            "default": "no_pii_in_logs_outputs_exports",
+            "masking_examples": {
+                "cpf": "9**.***.***-99",
+                "email": "a***@dominio.com",
+                "phone": "(**) *****-**34",
+                "address": "cidade/UF"
+            }
+        }
+    },
+    "templates": {
+        "issue_template_minimum_markdown": "## Contexto\n- O que você quer mudar/criar? Por quê?\n\n## Proposta\n- Descreva a mudança, incluindo alternativas consideradas.\n\n## Risco (obrigatório)\n- Nível: risk:low | risk:medium | risk:high\n- Envolve PII/identificadores? (sim/não) Explique.\n- Pode ser interpretado como acusação? (sim/não) Explique.\n- Pode facilitar targeting/doxxing? (sim/não) Explique.\n- ToS/licença da fonte é compatível? (sim/não) Link.\n\n## Referências\n- Docs: README / ROADMAP / METHODOLOGY / RISK_POLICY / GOVERNANCE\n\n## Critérios de aceite\n- [ ] Testes (ou justificativa)\n- [ ] Output explicável (evidência + limitações + alt hipóteses)\n- [ ] Sem linguagem acusatória\n- [ ] Sem PII por padrão",
+        "pr_template_minimum_markdown": "## O que mudou\n\n## Por que mudou\n\n## Risco\n- Nível (risk:low|medium|high): \n- `risk-review:required` aplicado? (sim/não)\n\n## Checklist\n- [ ] Sem linguagem acusatória (código/docs/UI/outputs)\n- [ ] Sem PII em logs/fixtures/exemplos (ou mascarado)\n- [ ] Indicadores com evidência + limitações + alt hipóteses + confiança\n- [ ] Testes adicionados/atualizados (ou justificativa)\n- [ ] Documentação atualizada (quando aplicável)\n- [ ] Se risk:high: RFC + DECISIONS.md + plano de rollback"
+    },
+    "seed_items": {
+        "notes": "Items are designed to be created as draft issues in the org Project, then converted to real issues per-repo when implementation starts.",
+        "items": [
+            {
+                "key": "T-0001",
+                "title": "Bootstrap GitHub Project: fields, labels, templates, and branch protection",
+                "phase": "PH-00",
+                "risk": "risk:medium",
+                "type": "governance",
+                "area": "devops",
+                "priority": "P0",
+                "effort_points": 5,
+                "rfc_required": "no",
+                "risk_review_required": "yes",
+                "references": [
+                    "GOVERNANCE",
+                    "RISK_POLICY",
+                    "SECURITY",
+                    "CODE_OF_CONDUCT",
+                    "ROADMAP"
+                ],
+                "acceptance_criteria": [
+                    "Org project has required custom fields (OA Workflow, Risk, Type, Area, Priority, etc.)",
+                    "Repos adopt branch protection + mandatory CI for main",
+                    "Issue/PR templates exist and enforce risk checklist",
+                    "Labels catalog is created consistently across repos"
+                ],
+                "deliverables": [
+                    ".github/ISSUE_TEMPLATE/*",
+                    ".github/pull_request_template.md",
+                    "CODEOWNERS (when repos exist)",
+                    "Documented automation workflow (GitHub Actions) for syncing items"
+                ],
+                "project_field_values": {
+                    "Phase": "PH-00",
+                    "OA Workflow": "Backlog",
+                    "Risk": "risk:medium",
+                    "Type": "governance",
+                    "Area": "devops",
+                    "Priority": "P0",
+                    "Effort (pts)": 5,
+                    "RFC required": "no",
+                    "Risk review required": "yes",
+                    "Docs refs": "GOVERNANCE,RISK_POLICY,SECURITY,CODE_OF_CONDUCT,ROADMAP"
+                },
+                "body_markdown": "**Key:** T-0001\n**Phase:** PH-00\n**Risk:** risk:medium\n\n## Objetivo\nBootstrap GitHub Project: fields, labels, templates, and branch protection\n\n## Critérios de aceite\n- [ ] Org project has required custom fields (OA Workflow, Risk, Type, Area, Priority, etc.)\n- [ ] Repos adopt branch protection + mandatory CI for main\n- [ ] Issue/PR templates exist and enforce risk checklist\n- [ ] Labels catalog is created consistently across repos\n\n## Entregáveis\n- .github/ISSUE_TEMPLATE/*\n- .github/pull_request_template.md\n- CODEOWNERS (when repos exist)\n- Documented automation workflow (GitHub Actions) for syncing items\n\n## Referências (docs)\nGOVERNANCE, RISK_POLICY, SECURITY, CODE_OF_CONDUCT, ROADMAP"
+            },
+            {
+                "key": "T-0101",
+                "title": "Define canonical entity_id strategy and initial catalog source (RFC)",
+                "phase": "PH-01",
+                "risk": "risk:high",
+                "type": "research",
+                "area": "analysis",
+                "priority": "P0",
+                "effort_points": 8,
+                "rfc_required": "yes",
+                "risk_review_required": "yes",
+                "references": [
+                    "ROADMAP",
+                    "METHODOLOGY",
+                    "RISK_POLICY",
+                    "GOVERNANCE"
+                ],
+                "acceptance_criteria": [
+                    "RFC defines entity_id format, alias strategy, and disambiguation rules",
+                    "Includes risk analysis for homonyms, targeting, and PII handling",
+                    "Defines what fields are allowed in catalog output (conservative defaults)"
+                ],
+                "deliverables": [
+                    "RFC document + DECISIONS entry",
+                    "Initial catalog schema (versioned)"
+                ],
+                "project_field_values": {
+                    "Phase": "PH-01",
+                    "OA Workflow": "Backlog",
+                    "Risk": "risk:high",
+                    "Type": "research",
+                    "Area": "analysis",
+                    "Priority": "P0",
+                    "Effort (pts)": 8,
+                    "RFC required": "yes",
+                    "Risk review required": "yes",
+                    "Docs refs": "ROADMAP,METHODOLOGY,RISK_POLICY,GOVERNANCE"
+                },
+                "body_markdown": "**Key:** T-0101\n**Phase:** PH-01\n**Risk:** risk:high\n\n## Objetivo\nDefine canonical entity_id strategy and initial catalog source (RFC)\n\n## Critérios de aceite\n- [ ] RFC defines entity_id format, alias strategy, and disambiguation rules\n- [ ] Includes risk analysis for homonyms, targeting, and PII handling\n- [ ] Defines what fields are allowed in catalog output (conservative defaults)\n\n## Entregáveis\n- RFC document + DECISIONS entry\n- Initial catalog schema (versioned)\n\n## Referências (docs)\nROADMAP, METHODOLOGY, RISK_POLICY, GOVERNANCE"
+            },
+            {
+                "key": "T-0201",
+                "title": "Implement run_record + audit schema (deterministic pipeline tracking)",
+                "phase": "PH-02",
+                "risk": "risk:medium",
+                "type": "feature",
+                "area": "core",
+                "priority": "P0",
+                "effort_points": 8,
+                "rfc_required": "no",
+                "risk_review_required": "yes",
+                "references": [
+                    "ROADMAP",
+                    "METHODOLOGY",
+                    "RISK_POLICY",
+                    "SECURITY"
+                ],
+                "acceptance_criteria": [
+                    "Each pipeline run produces run_id and run_record with code_version, connector versions, dataset fingerprints, quality checks, indicators IDs/params",
+                    "No PII in audit/logs by default (masking rules applied)"
+                ],
+                "deliverables": [
+                    "run_record JSON schema",
+                    "Audit Store interface",
+                    "Docs for provenance lineage"
+                ],
+                "project_field_values": {
+                    "Phase": "PH-02",
+                    "OA Workflow": "Backlog",
+                    "Risk": "risk:medium",
+                    "Type": "feature",
+                    "Area": "core",
+                    "Priority": "P0",
+                    "Effort (pts)": 8,
+                    "RFC required": "no",
+                    "Risk review required": "yes",
+                    "Docs refs": "ROADMAP,METHODOLOGY,RISK_POLICY,SECURITY"
+                },
+                "body_markdown": "**Key:** T-0201\n**Phase:** PH-02\n**Risk:** risk:medium\n\n## Objetivo\nImplement run_record + audit schema (deterministic pipeline tracking)\n\n## Critérios de aceite\n- [ ] Each pipeline run produces run_id and run_record with code_version, connector versions, dataset fingerprints, quality checks, indicators IDs/params\n- [ ] No PII in audit/logs by default (masking rules applied)\n\n## Entregáveis\n- run_record JSON schema\n- Audit Store interface\n- Docs for provenance lineage\n\n## Referências (docs)\nROADMAP, METHODOLOGY, RISK_POLICY, SECURITY"
+            },
+            {
+                "key": "T-0202",
+                "title": "MVP Analyze pipeline (1 source): snapshot -> normalize -> quality -> 1 indicator -> report JSON",
+                "phase": "PH-02",
+                "risk": "risk:medium",
+                "type": "feature",
+                "area": "core",
+                "priority": "P0",
+                "effort_points": 13,
+                "rfc_required": "no",
+                "risk_review_required": "yes",
+                "references": [
+                    "ROADMAP",
+                    "METHODOLOGY",
+                    "RISK_POLICY"
+                ],
+                "acceptance_criteria": [
+                    "Processing starts only after explicit entity selection",
+                    "Report includes summary/entities/facts/indicators/sources/audit",
+                    "Indicator is deterministic, explainable, lists false positives and alt hypotheses",
+                    "Cache_hit and TTL recorded"
+                ],
+                "deliverables": [
+                    "core-engine skeleton",
+                    "1 connector + transformer",
+                    "1 indicator spec + tests"
+                ],
+                "project_field_values": {
+                    "Phase": "PH-02",
+                    "OA Workflow": "Backlog",
+                    "Risk": "risk:medium",
+                    "Type": "feature",
+                    "Area": "core",
+                    "Priority": "P0",
+                    "Effort (pts)": 13,
+                    "RFC required": "no",
+                    "Risk review required": "yes",
+                    "Docs refs": "ROADMAP,METHODOLOGY,RISK_POLICY"
+                },
+                "body_markdown": "**Key:** T-0202\n**Phase:** PH-02\n**Risk:** risk:medium\n\n## Objetivo\nMVP Analyze pipeline (1 source): snapshot -> normalize -> quality -> 1 indicator -> report JSON\n\n## Critérios de aceite\n- [ ] Processing starts only after explicit entity selection\n- [ ] Report includes summary/entities/facts/indicators/sources/audit\n- [ ] Indicator is deterministic, explainable, lists false positives and alt hypotheses\n- [ ] Cache_hit and TTL recorded\n\n## Entregáveis\n- core-engine skeleton\n- 1 connector + transformer\n- 1 indicator spec + tests\n\n## Referências (docs)\nROADMAP, METHODOLOGY, RISK_POLICY"
+            },
+            {
+                "key": "T-0301",
+                "title": "AI plug-in interface + policy guard + ai audit fields (no facts, only hypotheses)",
+                "phase": "PH-03",
+                "risk": "risk:high",
+                "type": "feature",
+                "area": "analysis",
+                "priority": "P1",
+                "effort_points": 13,
+                "rfc_required": "yes",
+                "risk_review_required": "yes",
+                "references": [
+                    "ROADMAP",
+                    "METHODOLOGY",
+                    "RISK_POLICY",
+                    "SECURITY",
+                    "GOVERNANCE"
+                ],
+                "acceptance_criteria": [
+                    "AiAgent only outputs findings with evidence_refs into existing facts/indicators/sources",
+                    "audit.ai[] includes model_id, model_version, prompt_version, policy_version, input_hash, output_hash, duration_ms, nondeterministic flag",
+                    "Policy guard blocks banned terms and PII in AI outputs by default"
+                ],
+                "deliverables": [
+                    "AiAgent interface + orchestrator",
+                    "policy guard rules",
+                    "RFC + DECISIONS entry"
+                ],
+                "project_field_values": {
+                    "Phase": "PH-03",
+                    "OA Workflow": "Backlog",
+                    "Risk": "risk:high",
+                    "Type": "feature",
+                    "Area": "analysis",
+                    "Priority": "P1",
+                    "Effort (pts)": 13,
+                    "RFC required": "yes",
+                    "Risk review required": "yes",
+                    "Docs refs": "ROADMAP,METHODOLOGY,RISK_POLICY,SECURITY,GOVERNANCE"
+                },
+                "body_markdown": "**Key:** T-0301\n**Phase:** PH-03\n**Risk:** risk:high\n\n## Objetivo\nAI plug-in interface + policy guard + ai audit fields (no facts, only hypotheses)\n\n## Critérios de aceite\n- [ ] AiAgent only outputs findings with evidence_refs into existing facts/indicators/sources\n- [ ] audit.ai[] includes model_id, model_version, prompt_version, policy_version, input_hash, output_hash, duration_ms, nondeterministic flag\n- [ ] Policy guard blocks banned terms and PII in AI outputs by default\n\n## Entregáveis\n- AiAgent interface + orchestrator\n- policy guard rules\n- RFC + DECISIONS entry\n\n## Referências (docs)\nROADMAP, METHODOLOGY, RISK_POLICY, SECURITY, GOVERNANCE"
+            }
+        ]
+    }
+}

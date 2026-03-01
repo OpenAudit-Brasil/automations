@@ -1,0 +1,148 @@
+{
+    "tags": [
+        {
+            "label": "priority:high",
+            "color": "B60205"
+        },
+        {
+            "label": "priority:medium",
+            "color": "FBCA04"
+        },
+        {
+            "label": "priority:low",
+            "color": "D4C5F9"
+        },
+        {
+            "label": "type:feature",
+            "color": "1D76DB"
+        },
+        {
+            "label": "type:docs",
+            "color": "0075CA"
+        },
+        {
+            "label": "type:chore",
+            "color": "C5DEF5"
+        },
+        {
+            "label": "type:ci",
+            "color": "5319E7"
+        },
+        {
+            "label": "area:tooling",
+            "color": "0E8A16"
+        },
+        {
+            "label": "area:openapi",
+            "color": "006B75"
+        },
+        {
+            "label": "area:schema",
+            "color": "2EA44F"
+        },
+        {
+            "label": "area:examples",
+            "color": "A2EEEF"
+        },
+        {
+            "label": "area:catalog",
+            "color": "D4C5F9"
+        },
+        {
+            "label": "area:observability",
+            "color": "0052CC"
+        },
+        {
+            "label": "area:tests",
+            "color": "F9D0C4"
+        },
+        {
+            "label": "area:codegen",
+            "color": "8B5CF6"
+        },
+        {
+            "label": "area:typescript",
+            "color": "3178C6"
+        },
+        {
+            "label": "area:python",
+            "color": "3572A5"
+        },
+        {
+            "label": "area:governance",
+            "color": "111111"
+        },
+        {
+            "label": "area:community",
+            "color": "F9C513"
+        },
+        {
+            "label": "area:risk",
+            "color": "E11D48"
+        },
+        {
+            "label": "area:security",
+            "color": "D93F0B"
+        },
+        {
+            "label": "area:contracts",
+            "color": "0B5394"
+        },
+        {
+            "label": "area:api",
+            "color": "0052CC"
+        },
+        {
+            "label": "area:search",
+            "color": "2F81F7"
+        },
+        {
+            "label": "area:matching",
+            "color": "A371F7"
+        },
+        {
+            "label": "area:cache",
+            "color": "D4A72C"
+        },
+        {
+            "label": "area:devops",
+            "color": "6F42C1"
+        },
+        {
+            "label": "area:docs",
+            "color": "BFDADC"
+        },
+        {
+            "label": "area:transform",
+            "color": "2EA44F"
+        },
+        {
+            "label": "area:qa",
+            "color": "A2EEEF"
+        },
+        {
+            "label": "area:export",
+            "color": "6F42C1"
+        },
+        {
+            "label": "area:audit",
+            "color": "0052CC"
+        },
+        {
+            "label": "area:node",
+            "color": "2F81F7"
+        },
+        {
+            "label": "area:metrics",
+            "color": "D4A72C"
+        },
+        {
+            "label": "area:tracing",
+            "color": "6F42C1"
+        },
+        {
+            "label": "good first issue",
+            "color": "7057FF"
+        }
+    ]
+}
